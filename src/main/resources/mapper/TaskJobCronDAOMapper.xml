@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="quartz.dao.TaskJobCronDAO">
+
+    <select id="getAll" resultType="quartz.model.TaskJobCron">
+        select * from task_job_cron 
+    </select>
+
+    <select id="getTask" parameterType="quartz.model.TaskJobCron" resultType="quartz.model.TaskJobCron">
+        select * from task_job_cron where 1=1
+        <if test="id !=null and id>0">
+            AND id=#{id}
+        </if>
+        <if test="jobName !=null and jobName!=''">
+            AND jobName=#{jobName}
+        </if>
+        <if test="jobGroup !=null and jobGroup!=''">
+            AND jobGroup=#{jobGroup}
+        </if>
+        <if test="entityClass !=null and entityClass!=''">
+            AND entityClass=#{entityClass}
+        </if>
+        <if test="cronExpression !=null and cronExpression!=''">
+            AND cronExpression=#{cronExpression}
+        </if>
+        <if test="priority !=null and priority>=0">
+            AND priority=#{priority}
+        </if>
+        <if test="misfire !=null and misfire>=0">
+            AND misfire=#{misfire}
+        </if>
+    </select>
+
+    <insert id="insert" parameterType="quartz.model.TaskJobCron">
+        INSERT INTO task_job_cron (
+            jobName,
+            jobGroup,
+            entityClass,
+            cronExpression,
+            priority,
+            misfire,
+            ifBoot,
+            isRelyOn,
+            relyWaitTime,
+            relyOn,
+            startTime,
+            endTime,
+            jobType,
+            description,
+            creater,
+            updater
+        )
+        VALUES
+            (
+                #{jobName},
+                #{jobGroup},
+                #{entityClass},
+                #{cronExpression},
+                #{priority},
+                #{misfire},
+                #{ifBoot},
+                #{isRelyOn},
+                #{relyWaitTime},
+                #{relyOn},
+                #{startTime},
+                #{endTime},
+                #{jobType},
+                #{description},
+                #{creater},
+                #{updater}
+            );
+    </insert>
+
+    <update id="update" parameterType="quartz.model.TaskJobCron">
+        UPDATE task_job_cron
+        SET
+            entityClass=#{entityClass},
+            cronExpression=#{cronExpression},
+            priority=#{priority},
+            misfire=#{misfire},
+            ifBoot=#{ifBoot},
+            isRelyOn=#{isRelyOn},
+            relyWaitTime=#{relyWaitTime},
+            relyOn=#{relyOn},
+            startTime=#{startTime},
+            endTime=#{endTime},
+            jobType=#{jobType},
+            description=#{description},
+            creater=#{creater},
+            updater=#{updater}
+        WHERE
+            jobName=#{jobName} AND
+            jobGroup=#{jobGroup}
+	</update>
+
+    <delete id="delete" parameterType="quartz.model.TaskJobCron">
+        delete from task_job_cron
+        WHERE
+            jobName=#{jobName} AND
+            jobGroup=#{jobGroup}
+    </delete>
+</mapper>
+

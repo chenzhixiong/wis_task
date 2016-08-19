@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="quartz.dao.TaskJobStateDAO">
+
+    <insert id="insert" parameterType="quartz.model.TaskJobState">
+        INSERT INTO task_job_state (
+            instanceNo,
+            jobName,
+            jobGroup,
+            fireTime,
+            jobState
+        )
+        VALUES
+            (
+                #{instanceNo},
+                #{jobName},
+                #{jobGroup},
+                #{fireTime},
+                #{jobState}
+            );
+    </insert>
+
+    <select id="getAll" resultType="quartz.model.TaskJobState">
+        select * from task_job_state
+    </select>
+
+    <select id="getStateCount" parameterType="quartz.model.TaskJobState" resultType="int">
+        select COUNT(*) from task_job_state where 1=1
+        <if test="instanceNo !=null and instanceNo!=''">
+            AND instanceNo=#{instanceNo}
+        </if>
+        <if test="jobName !=null and jobName!=''">
+            AND jobName=#{jobName}
+        </if>
+        <if test="jobGroup !=null and jobGroup!=''">
+            AND jobGroup=#{jobGroup}
+        </if>
+        <if test="jobState !=null and jobState!=''">
+        AND jobState=#{jobState}
+        </if>
+        <!-- 这里的 fireTime 和 recordTime 暂作传递参数使用 -->
+        <if test="fireTime !=null and fireTime!=''">
+            AND <![CDATA[
+                        fireTime <= #{fireTime}
+                 ]]>
+        </if>
+        <if test="recordTime !=null and recordTime!=''">
+            AND <![CDATA[
+                        fireTime > #{recordTime}
+                 ]]>
+        </if>
+    </select>
+
+</mapper>
+
