@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="quartz.dao.TaskJobCronDAO">
+<mapper namespace="com.gszh.wis.quartz.dao.TaskJobCronDAO">
 
-    <select id="getAll" resultType="quartz.model.TaskJobCron">
+    <select id="getAll" resultType="com.gszh.wis.quartz.model.TaskJobCron">
         select * from task_job_cron 
     </select>
 
-    <select id="getTask" parameterType="quartz.model.TaskJobCron" resultType="quartz.model.TaskJobCron">
+    <select id="getTask" parameterType="com.gszh.wis.quartz.model.TaskJobCron" resultType="com.gszh.wis.quartz.model.TaskJobCron">
         select * from task_job_cron where 1=1
         <if test="id !=null and id>0">
             AND id=#{id}
@@ -31,7 +31,7 @@
         </if>
     </select>
 
-    <insert id="insert" parameterType="quartz.model.TaskJobCron">
+    <insert id="insert" parameterType="com.gszh.wis.quartz.model.TaskJobCron">
         INSERT INTO task_job_cron (
             jobName,
             jobGroup,
@@ -71,7 +71,7 @@
             );
     </insert>
 
-    <update id="update" parameterType="quartz.model.TaskJobCron">
+    <update id="update" parameterType="com.gszh.wis.quartz.model.TaskJobCron">
         UPDATE task_job_cron
         SET
             entityClass=#{entityClass},
@@ -93,7 +93,7 @@
             jobGroup=#{jobGroup}
 	</update>
 
-    <delete id="delete" parameterType="quartz.model.TaskJobCron">
+    <delete id="delete" parameterType="com.gszh.wis.quartz.model.TaskJobCron">
         delete from task_job_cron
         WHERE
             jobName=#{jobName} AND

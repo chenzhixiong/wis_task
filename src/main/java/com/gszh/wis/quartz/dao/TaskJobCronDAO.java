@@ -1,6 +1,6 @@
-package quartz.dao;
+package com.gszh.wis.quartz.dao;
 
-import quartz.model.TaskJobCron;
+import com.gszh.wis.quartz.model.TaskJobCron;
 
 import java.util.List;
 

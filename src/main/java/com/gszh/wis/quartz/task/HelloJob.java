@@ -1,4 +1,4 @@
-package quartz.task;
+package com.gszh.wis.quartz.task;
 
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;

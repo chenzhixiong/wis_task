@@ -1,6 +1,6 @@
-package quartz.dao;
+package com.gszh.wis.quartz.dao;
 
-import quartz.model.TaskJobState;
+import com.gszh.wis.quartz.model.TaskJobState;
 
 /**
  * Created by chenzhixiong on 2016/8/18.

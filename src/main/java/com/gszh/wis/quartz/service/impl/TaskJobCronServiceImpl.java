@@ -1,10 +1,10 @@
-package quartz.service.impl;
+package com.gszh.wis.quartz.service.impl;
 
+import com.gszh.wis.quartz.dao.TaskJobCronDAO;
+import com.gszh.wis.quartz.model.TaskJobCron;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import quartz.dao.TaskJobCronDAO;
-import quartz.model.TaskJobCron;
-import quartz.service.TaskJobCronService;
+import com.gszh.wis.quartz.service.TaskJobCronService;
 
 import java.util.List;
 

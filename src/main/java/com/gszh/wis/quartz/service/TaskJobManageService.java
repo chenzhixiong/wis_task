@@ -1,6 +1,6 @@
-package quartz.service;
+package com.gszh.wis.quartz.service;
 
-import quartz.model.TaskJobCron;
+import com.gszh.wis.quartz.model.TaskJobCron;
 
 /**
  * Created by chenzhixiong on 2016/8/11.

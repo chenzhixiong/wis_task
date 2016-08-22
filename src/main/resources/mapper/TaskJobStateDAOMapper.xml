@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="quartz.dao.TaskJobStateDAO">
+<mapper namespace="com.gszh.wis.quartz.dao.TaskJobStateDAO">
 
-    <insert id="insert" parameterType="quartz.model.TaskJobState">
+    <insert id="insert" parameterType="com.gszh.wis.quartz.model.TaskJobState">
         INSERT INTO task_job_state (
             instanceNo,
             jobName,
@@ -20,11 +20,11 @@
             );
     </insert>
 
-    <select id="getAll" resultType="quartz.model.TaskJobState">
+    <select id="getAll" resultType="com.gszh.wis.quartz.model.TaskJobState">
         select * from task_job_state
     </select>
 
-    <select id="getStateCount" parameterType="quartz.model.TaskJobState" resultType="int">
+    <select id="getStateCount" parameterType="com.gszh.wis.quartz.model.TaskJobState" resultType="int">
         select COUNT(*) from task_job_state where 1=1
         <if test="instanceNo !=null and instanceNo!=''">
             AND instanceNo=#{instanceNo}

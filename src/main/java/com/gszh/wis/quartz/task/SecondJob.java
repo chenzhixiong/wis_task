@@ -1,17 +1,20 @@
-package quartz.controller.test;
+package com.gszh.wis.quartz.task;
+
+import org.quartz.DisallowConcurrentExecution;
+import org.quartz.Job;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 /**
+ * 测试任务执行时间在6-9s之间
  * Created by chenzhixiong on 2016/8/12.
  */
-public class TestMain {
-    public static void main(String[] args) {
-        testTimeUse();
-    }
-
+@DisallowConcurrentExecution
+public class SecondJob implements Job{
     /**
      * 测试执行时间
      */
@@ -19,12 +22,17 @@ public class TestMain {
         System.out.println(new Date());
         long flag=1L;
         List<Long> list= new ArrayList<Long>();
-        for(int i = 0;i<20000000;i++){
+        for(int i = 0;i<30000000;i++){
             flag++;
             list.add(flag);
         }
         System.out.println(list.size()+"次计算任务");
         list.clear();
         System.out.println(new Date());
+    }
+
+    @Override
+    public void execute(JobExecutionContext context) throws JobExecutionException {
+        testTimeUse();
     }
 }

@@ -1,10 +1,10 @@
-package quartz.listener;
+package com.gszh.wis.quartz.listener;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
-import quartz.service.TaskJobManageService;
+import com.gszh.wis.quartz.service.TaskJobManageService;
 
 /**
  * 加载 spring IoC 容器后，启用的监听器

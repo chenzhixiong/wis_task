@@ -1,12 +1,12 @@
-package quartz.listener;
+package com.gszh.wis.quartz.listener;
 
+import com.gszh.wis.quartz.dao.TaskJobStateDAO;
 import org.quartz.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import quartz.dao.TaskJobStateDAO;
-import quartz.model.StaticValue;
-import quartz.model.TaskJobState;
+import com.gszh.wis.quartz.model.StaticValue;
+import com.gszh.wis.quartz.model.TaskJobState;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -115,7 +115,7 @@ public class AllTriggerListener implements TriggerListener {
                     flag = false;
                 }
                 //依赖任务执行完成或等待超时，将跳出 while 循环
-                while (flag || relyWaitTime == 0) {
+                while (flag || relyWaitTime == -1) {
                     try {
                         Thread.sleep(60000);
                         //查询依赖任务是否执行
@@ -127,7 +127,7 @@ public class AllTriggerListener implements TriggerListener {
                         e.printStackTrace();
                     }
                 }
-                if (relyWaitTime == 0) {
+                if (relyWaitTime !=null && relyWaitTime <0) {
                     logger.error(key + " 等待超时！");
                 }
             }
