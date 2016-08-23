@@ -2,13 +2,16 @@ package com.gszh.wis.quartz.controller.test;
 
 import com.gszh.wis.quartz.dao.TaskJobCronDAO;
 import com.gszh.wis.quartz.dao.TaskJobStateDAO;
+import com.gszh.wis.quartz.model.StaticValue;
+import com.gszh.wis.quartz.model.TaskJobCron;
+import com.gszh.wis.quartz.model.TaskJobParam;
+import com.gszh.wis.quartz.model.TaskJobState;
+import com.gszh.wis.quartz.service.TaskJobCronService;
+import com.gszh.wis.quartz.service.TaskJobManageService;
+import org.quartz.JobDataMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
-import com.gszh.wis.quartz.model.StaticValue;
-import com.gszh.wis.quartz.model.TaskJobCron;
-import com.gszh.wis.quartz.model.TaskJobState;
-import com.gszh.wis.quartz.service.TaskJobCronService;
 
 import java.util.Date;
 
@@ -24,6 +27,20 @@ public class TestController {
     private TaskJobCronDAO taskJobCronDAO;
     @Autowired
     private TaskJobStateDAO taskJobStateDAO;
+    @Autowired
+    private TaskJobManageService taskJobManageService;
+
+    /**
+     * 查询 cron定时任务列表
+     */
+    @RequestMapping("/testParam")
+    public void testParam(){
+        TaskJobCron po=new TaskJobCron();
+        po.setJobGroup("1");
+        po.setJobName("1");
+//        JobDataMap map = this.taskJobManageService.getJobParam(po);
+//        System.out.println(map.size());
+    }
 
     /**
      * 查询 cron定时任务列表

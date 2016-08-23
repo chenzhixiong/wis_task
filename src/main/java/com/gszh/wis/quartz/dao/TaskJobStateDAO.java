@@ -9,6 +9,10 @@ public interface TaskJobStateDAO {
 
     int insert(TaskJobState po);
 
+    int delete(TaskJobState po);
+
+    int update(TaskJobState po);
+
     /**
      * 查询特定状态的任务实例是否存在
      * @param po

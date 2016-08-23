@@ -1,6 +1,7 @@
 package com.gszh.wis.quartz.service;
 
 import com.gszh.wis.quartz.model.TaskJobCron;
+import org.quartz.JobDataMap;
 
 /**
  * Created by chenzhixiong on 2016/8/11.
@@ -56,5 +57,6 @@ public interface TaskJobManageService {
     /**
      * scheduler 注册任务
      */
-    void addTaskToScheduler(TaskJobCron po);
+    void addCronTaskToScheduler(TaskJobCron po);
+
 }

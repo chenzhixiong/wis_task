@@ -1,11 +1,13 @@
 package com.gszh.wis.quartz.service.impl;
 
 import com.gszh.wis.quartz.dao.TaskJobCronDAO;
+import com.gszh.wis.quartz.dao.TaskJobParamDAO;
 import com.gszh.wis.quartz.dao.TaskJobStateDAO;
 import com.gszh.wis.quartz.listener.AllJobListener;
 import com.gszh.wis.quartz.listener.AllTriggerListener;
 import com.gszh.wis.quartz.listener.MySchedulerListener;
 import com.gszh.wis.quartz.model.TaskJobCron;
+import com.gszh.wis.quartz.model.TaskJobParam;
 import com.gszh.wis.quartz.service.TaskJobManageService;
 import org.quartz.*;
 import org.slf4j.Logger;
@@ -31,7 +33,8 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
     private SchedulerFactoryBean schedulerFactoryBean;
     @Autowired
     private TaskJobStateDAO taskJobStateDAO;
-
+    @Autowired
+    private TaskJobParamDAO taskJobParamDAO;
 
     /**
      * 注册监听器
@@ -62,7 +65,7 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
             if (list != null && list.size() > 0) {
                 for (TaskJobCron po : list) {
                     if (po.getIfBoot() == 0)
-                        addTaskToScheduler(po);
+                        addCronTaskToScheduler(po);
                 }
             }
         } catch (SchedulerException e) {
@@ -79,7 +82,7 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
     public void startOne(TaskJobCron po) {
         List<TaskJobCron> list = this.taskJobCronDAO.getTask(po);
         if (list.size() == 1) {
-            addTaskToScheduler(list.get(0));
+            addCronTaskToScheduler(list.get(0));
         } else {
             logger.error("该任务不存在！");
         }
@@ -97,7 +100,7 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
         param.setJobGroup(po.getJobGroup());
         List<TaskJobCron> list = this.taskJobCronDAO.getTask(param);
         if (list.size() == 0) {
-            addTaskToScheduler(po);
+            addCronTaskToScheduler(po);
             int count = this.taskJobCronDAO.insert(po);
         } else {
             logger.error("该任务key已存在！");
@@ -113,7 +116,7 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
     public void updateOne(TaskJobCron po) {
         List<TaskJobCron> list = this.taskJobCronDAO.getTask(po);
         if (list.size() == 1) {
-            addTaskToScheduler(po);
+            addCronTaskToScheduler(po);
             int count = this.taskJobCronDAO.update(po);
         } else {
             logger.error("修改失败");
@@ -168,19 +171,17 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
     }
 
     /**
-     * scheduler 注册任务并启动
+     * scheduler 注册 cron 任务并启动
      *
      * @param po
      */
     @Override
-    public void addTaskToScheduler(TaskJobCron po) {
+    public void addCronTaskToScheduler(TaskJobCron po) {
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
         try {
             JobDataMap parameters = new JobDataMap();
-            //判断实体类是否有参数
-//            if (po.getParameters() != null && !"".equals(po.getParameters().trim())) {
-//                parameters = putJobDataMap(po.getParameters());
-//            }
+            //获取实体类参数
+            parameters = getJobParam(po);
             /*创建执行任务，可设置如下参数
             * 1：JobKey 任务标识
             * 2：entityClass 任务执行类
@@ -263,19 +264,20 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
     }
 
     /**
-     * 将形如：key:value;key:value 的字符串转为 JobDataMap
+     * 查询任务类的参数
      * @param po
      * @return
      */
-    private JobDataMap putJobDataMap(String po) {
+    private JobDataMap getJobParam(TaskJobCron po) {
         JobDataMap parameters = new JobDataMap();
-        String[] params = po.split(";");
-        if (params != null && params.length!=0) {
-            for (String param : params) {
-                String[] pa = param.split(":");
-                parameters.put(pa[0], pa[1]);
+        TaskJobParam paramPo=new TaskJobParam(po.getJobName(),po.getJobGroup());
+        List<TaskJobParam> list = this.taskJobParamDAO.getJobParam(paramPo);
+        if(list!=null && list.size()>0){
+            for(TaskJobParam param:list){
+                parameters.put(param.getParamName(),param.getParamValue());
             }
         }
         return parameters;
     }
+
 }
