@@ -178,9 +178,9 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
         try {
             JobDataMap parameters = new JobDataMap();
             //判断实体类是否有参数
-            if (po.getParameters() != null && !"".equals(po.getParameters().trim())) {
-                parameters = putJobDataMap(po.getParameters());
-            }
+//            if (po.getParameters() != null && !"".equals(po.getParameters().trim())) {
+//                parameters = putJobDataMap(po.getParameters());
+//            }
             /*创建执行任务，可设置如下参数
             * 1：JobKey 任务标识
             * 2：entityClass 任务执行类

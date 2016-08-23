@@ -19,8 +19,8 @@ public class BootManageListener implements ApplicationListener<ContextRefreshedE
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         if(event.getApplicationContext().getParent() == null) {//root application context 没有parent，他就是老大.
-            this.taskJobManageService.regeistListener();
-            this.taskJobManageService.startAll();
+//            this.taskJobManageService.regeistListener();
+//            this.taskJobManageService.startAll();
         }
     }
 }

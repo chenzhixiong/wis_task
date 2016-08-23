@@ -12,16 +12,16 @@
             AND id=#{id}
         </if>
         <if test="jobName !=null and jobName!=''">
-            AND jobName=#{jobName}
+            AND job_name=#{jobName}
         </if>
         <if test="jobGroup !=null and jobGroup!=''">
-            AND jobGroup=#{jobGroup}
+            AND job_group=#{jobGroup}
         </if>
         <if test="entityClass !=null and entityClass!=''">
-            AND entityClass=#{entityClass}
+            AND entity_class=#{entityClass}
         </if>
         <if test="cronExpression !=null and cronExpression!=''">
-            AND cronExpression=#{cronExpression}
+            AND cron_expression=#{cronExpression}
         </if>
         <if test="priority !=null and priority>=0">
             AND priority=#{priority}
@@ -33,20 +33,23 @@
 
     <insert id="insert" parameterType="com.gszh.wis.quartz.model.TaskJobCron">
         INSERT INTO task_job_cron (
-            jobName,
-            jobGroup,
-            entityClass,
-            cronExpression,
+            id,
+            job_name,
+            job_group,
+            entity_class,
+            cron_expression,
             priority,
             misfire,
-            ifBoot,
-            isRelyOn,
-            relyWaitTime,
-            relyOn,
-            startTime,
-            endTime,
-            jobType,
+            if_boot,
+            is_rely_on,
+            rely_wait_time,
+            rely_on,
+            start_time,
+            end_time,
+            job_type,
             description,
+            create_time,
+            update_time,
             creater,
             updater
         )
@@ -74,30 +77,30 @@
     <update id="update" parameterType="com.gszh.wis.quartz.model.TaskJobCron">
         UPDATE task_job_cron
         SET
-            entityClass=#{entityClass},
-            cronExpression=#{cronExpression},
+            entity_class=#{entityClass},
+            cron_expression=#{cronExpression},
             priority=#{priority},
             misfire=#{misfire},
-            ifBoot=#{ifBoot},
-            isRelyOn=#{isRelyOn},
-            relyWaitTime=#{relyWaitTime},
-            relyOn=#{relyOn},
-            startTime=#{startTime},
-            endTime=#{endTime},
-            jobType=#{jobType},
+            if_boot=#{ifBoot},
+            is_rely_on=#{isRelyOn},
+            rely_wait_time=#{relyWaitTime},
+            rely_on=#{relyOn},
+            start_time=#{startTime},
+            end_time=#{endTime},
+            job_type=#{jobType},
             description=#{description},
-            creater=#{creater},
-            updater=#{updater}
+            create_time=#{creater},
+            update_time=#{updater}
         WHERE
-            jobName=#{jobName} AND
-            jobGroup=#{jobGroup}
+            job_name=#{jobName} AND
+            job_group=#{jobGroup}
 	</update>
 
     <delete id="delete" parameterType="com.gszh.wis.quartz.model.TaskJobCron">
         delete from task_job_cron
         WHERE
-            jobName=#{jobName} AND
-            jobGroup=#{jobGroup}
+            job_name=#{jobName} AND
+            job_group=#{jobGroup}
     </delete>
 </mapper>
 

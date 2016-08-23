@@ -4,10 +4,10 @@
 
     <insert id="insert" parameterType="com.gszh.wis.quartz.model.TaskJobState">
         INSERT INTO task_job_state (
-            jobName,
-            jobGroup,
-            fireTime,
-            jobState
+            job_name,
+            job_group,
+            fire_time,
+            job_state
         )
         VALUES
             (
@@ -25,26 +25,26 @@
     <select id="getStateCount" parameterType="com.gszh.wis.quartz.model.TaskJobState" resultType="int">
         select COUNT(*) from task_job_state where 1=1
         <if test="instanceNo !=null and instanceNo!=''">
-            AND instanceNo=#{instanceNo}
+            AND instance_no=#{instanceNo}
         </if>
         <if test="jobName !=null and jobName!=''">
-            AND jobName=#{jobName}
+            AND job_name=#{jobName}
         </if>
         <if test="jobGroup !=null and jobGroup!=''">
-            AND jobGroup=#{jobGroup}
+            AND job_group=#{jobGroup}
         </if>
         <if test="jobState !=null and jobState!=''">
-        AND jobState=#{jobState}
+        AND job_state=#{jobState}
         </if>
         <!-- 这里的 fireTime 和 recordTime 暂作传递参数使用 -->
         <if test="fireTime !=null and fireTime!=''">
             AND <![CDATA[
-                        fireTime <= #{fireTime}
+                        fire_time <= #{fireTime}
                  ]]>
         </if>
         <if test="recordTime !=null and recordTime!=''">
             AND <![CDATA[
-                        fireTime > #{recordTime}
+                        fire_time > #{recordTime}
                  ]]>
         </if>
     </select>
