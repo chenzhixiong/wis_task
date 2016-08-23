@@ -12,7 +12,7 @@
     <!-- <context:annotation-config/> -->
 
 	<!-- 自动扫描注解（Controller 类型注解不扫描，交由 springmvc 处理） -->
-    <context:component-scan base-package="quartz.*">
+    <context:component-scan base-package="com.gszh.wis.quartz.*">
         <context:exclude-filter type="annotation"
                                 expression="org.springframework.stereotype.Controller"/>
     </context:component-scan>
@@ -30,7 +30,7 @@
     <!-- 扫描basePackage接口 -->
     <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
         <!-- 映射器接口文件的包路径， -->
-        <property name="basePackage" value="quartz.dao"/>
+        <property name="basePackage" value="com.gszh.wis.quartz.dao"/>
     </bean>
 
     <!-- 定义事务管理器（声明式的事务） -->
@@ -65,7 +65,7 @@
     <bean id="sqlSessionFactoryBean" class="org.mybatis.spring.SqlSessionFactoryBean">
         <property name="dataSource" ref="dataSource"></property>
         <!-- 配置了typeAliasesPackage之后，在映射文件中，这个包下的实体类可以不写全名 -->
-        <property name="typeAliasesPackage" value="quartz.model"></property>
+        <property name="typeAliasesPackage" value="com.gszh.wis.quartz.model"></property>
         <property name="configLocation" value="classpath:mybatis-conf.xml"></property>
         <!-- 配置映射映射文件的位置 -->
         <property name="mapperLocations" value="classpath:mapper/*.xml"></property>

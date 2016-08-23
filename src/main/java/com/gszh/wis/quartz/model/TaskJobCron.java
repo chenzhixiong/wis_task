@@ -11,6 +11,7 @@ public class TaskJobCron {
     private String jobName;
     private String jobGroup;
     private String entityClass;
+    private String parameters;
     private String cronExpression;
     private Integer priority;
     private Integer misfire;
@@ -57,6 +58,14 @@ public class TaskJobCron {
 
     public void setEntityClass(String entityClass) {
         this.entityClass = entityClass;
+    }
+
+    public String getParameters() {
+        return parameters;
+    }
+
+    public void setParameters(String parameters) {
+        this.parameters = parameters;
     }
 
     public String getCronExpression() {
@@ -186,6 +195,7 @@ public class TaskJobCron {
                 ", jobName='" + jobName + '\'' +
                 ", jobGroup='" + jobGroup + '\'' +
                 ", entityClass='" + entityClass + '\'' +
+                ", parameters='" + parameters + '\'' +
                 ", cronExpression='" + cronExpression + '\'' +
                 ", priority=" + priority +
                 ", misfire=" + misfire +

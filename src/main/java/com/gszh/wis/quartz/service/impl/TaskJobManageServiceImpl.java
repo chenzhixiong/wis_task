@@ -1,6 +1,7 @@
 package com.gszh.wis.quartz.service.impl;
 
 import com.gszh.wis.quartz.dao.TaskJobCronDAO;
+import com.gszh.wis.quartz.dao.TaskJobStateDAO;
 import com.gszh.wis.quartz.listener.AllJobListener;
 import com.gszh.wis.quartz.listener.AllTriggerListener;
 import com.gszh.wis.quartz.listener.MySchedulerListener;
@@ -28,6 +29,8 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
     private TaskJobCronDAO taskJobCronDAO;
     @Autowired
     private SchedulerFactoryBean schedulerFactoryBean;
+    @Autowired
+    private TaskJobStateDAO taskJobStateDAO;
 
 
     /**
@@ -39,7 +42,7 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
         try {
             scheduler.getListenerManager().addSchedulerListener(new MySchedulerListener());
             scheduler.getListenerManager().addJobListener(new AllJobListener());
-            scheduler.getListenerManager().addTriggerListener(new AllTriggerListener());
+            scheduler.getListenerManager().addTriggerListener(new AllTriggerListener(taskJobStateDAO));
             logger.info("Regeist all Listeners!");
         } catch (SchedulerException e) {
             e.printStackTrace();
@@ -56,9 +59,9 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
             //清空定时任务队列，重新从数据库中读取任务列表
             scheduler.clear();
             List<TaskJobCron> list = this.taskJobCronDAO.getAll();
-            if(list!=null && list.size()>0) {
-                for (TaskJobCron po : list){
-                    if(po.getIfBoot()==0)
+            if (list != null && list.size() > 0) {
+                for (TaskJobCron po : list) {
+                    if (po.getIfBoot() == 0)
                         addTaskToScheduler(po);
                 }
             }
@@ -89,7 +92,7 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
      */
     @Override
     public void addOne(TaskJobCron po) {
-        TaskJobCron param=new TaskJobCron();
+        TaskJobCron param = new TaskJobCron();
         param.setJobName(po.getJobName());
         param.setJobGroup(po.getJobGroup());
         List<TaskJobCron> list = this.taskJobCronDAO.getTask(param);
@@ -109,10 +112,10 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
     @Override
     public void updateOne(TaskJobCron po) {
         List<TaskJobCron> list = this.taskJobCronDAO.getTask(po);
-        if(list.size()==1){
+        if (list.size() == 1) {
             addTaskToScheduler(po);
             int count = this.taskJobCronDAO.update(po);
-        }else{
+        } else {
             logger.error("修改失败");
         }
     }
@@ -157,7 +160,7 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
         try {
             pauseOne(po);
-            scheduler.deleteJob(JobKey.jobKey(po.getJobName(),po.getJobGroup()));
+            scheduler.deleteJob(JobKey.jobKey(po.getJobName(), po.getJobGroup()));
             int count = this.taskJobCronDAO.delete(po);
         } catch (SchedulerException e) {
             e.printStackTrace();
@@ -173,6 +176,11 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
     public void addTaskToScheduler(TaskJobCron po) {
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
         try {
+            JobDataMap parameters = new JobDataMap();
+            //判断实体类是否有参数
+            if (po.getParameters() != null && !"".equals(po.getParameters().trim())) {
+                parameters = putJobDataMap(po.getParameters());
+            }
             /*创建执行任务，可设置如下参数
             * 1：JobKey 任务标识
             * 2：entityClass 任务执行类
@@ -180,22 +188,16 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
             * 4：relyOn 所依赖的其他任务标识
             * 5：relyWaitTime 允许依赖等待时长*/
             JobDetail jobDetail = null;
-            JobKey jobKey=JobKey.jobKey(po.getJobName(), po.getJobGroup());
+            JobKey jobKey = JobKey.jobKey(po.getJobName(), po.getJobGroup());
             //若任务已存在，则更新配置，若不存在，则创建一个
-            if(scheduler.checkExists(jobKey)){
-                jobDetail=scheduler.getJobDetail(jobKey).getJobBuilder()
+            if (scheduler.checkExists(jobKey)) {
+                jobDetail = scheduler.getJobDetail(jobKey).getJobBuilder()
                         .newJob((Class<? extends Job>) Class.forName(po.getEntityClass()))
                         .withIdentity(jobKey)
-                        .usingJobData(jobKey + "isRelyOn", po.getIsRelyOn())
-                        .usingJobData(jobKey + "relyOn", po.getRelyOn())
-                        .usingJobData(jobKey +"relyWaitTime",po.getRelyWaitTime())
                         .build();
-            }else{
+            } else {
                 jobDetail = JobBuilder.newJob((Class<? extends Job>) Class.forName(po.getEntityClass()))
                         .withIdentity(jobKey)
-                        .usingJobData(jobKey+"isRelyOn",po.getIsRelyOn())
-                        .usingJobData(jobKey+"relyOn",po.getRelyOn())
-                        .usingJobData(jobKey +"relyWaitTime",po.getRelyWaitTime())
                         .build();
             }
 
@@ -220,22 +222,34 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
             CronTrigger trigger = null;
             TriggerKey triggerKey = TriggerKey.triggerKey(po.getJobName(), po.getJobGroup());
             //若触发器已存在，则更新配置，若不存在，则创建一个
-            if(scheduler.checkExists(triggerKey)){
-                trigger=scheduler.getTrigger(triggerKey).getTriggerBuilder().newTrigger()
+            if (scheduler.checkExists(triggerKey)) {
+                trigger = scheduler.getTrigger(triggerKey).getTriggerBuilder().newTrigger()
                         .withIdentity(triggerKey)
                         .withSchedule(cronScheduleBuilder)
                         .withPriority(po.getPriority())
+                        .usingJobData(jobKey + "isRelyOn", po.getIsRelyOn())
+                        .usingJobData(jobKey + "relyOn", po.getRelyOn())
+                        .usingJobData(jobKey + "relyWaitTime", po.getRelyWaitTime())
                         .startAt(po.getStartTime() != null ? po.getStartTime() : new Date())
                         .endAt(po.getEndTime())
                         .build();
-            }else{
+                if(parameters!=null&&!parameters.isEmpty()){
+                    trigger.getJobDataMap().putAll(parameters);
+                }
+            } else {
                 trigger = (CronTrigger) TriggerBuilder.newTrigger()
                         .withIdentity(triggerKey)
                         .withSchedule(cronScheduleBuilder)
                         .withPriority(po.getPriority())
+                        .usingJobData(jobKey + "isRelyOn", po.getIsRelyOn())
+                        .usingJobData(jobKey + "relyOn", po.getRelyOn())
+                        .usingJobData(jobKey + "relyWaitTime", po.getRelyWaitTime())
                         .startAt(po.getStartTime() != null ? po.getStartTime() : new Date())
                         .endAt(po.getEndTime())
                         .build();
+                if(parameters!=null&&!parameters.isEmpty()){
+                    trigger.getJobDataMap().putAll(parameters);
+                }
             }
 
             //任务注册到调度程序中
@@ -246,5 +260,22 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
             e.printStackTrace();
         }
 
+    }
+
+    /**
+     * 将形如：key:value;key:value 的字符串转为 JobDataMap
+     * @param po
+     * @return
+     */
+    private JobDataMap putJobDataMap(String po) {
+        JobDataMap parameters = new JobDataMap();
+        String[] params = po.split(";");
+        if (params != null && params.length!=0) {
+            for (String param : params) {
+                String[] pa = param.split(":");
+                parameters.put(pa[0], pa[1]);
+            }
+        }
+        return parameters;
     }
 }

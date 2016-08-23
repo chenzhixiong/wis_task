@@ -1,12 +1,11 @@
 package com.gszh.wis.quartz.listener;
 
 import com.gszh.wis.quartz.dao.TaskJobStateDAO;
+import com.gszh.wis.quartz.model.StaticValue;
+import com.gszh.wis.quartz.model.TaskJobState;
 import org.quartz.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import com.gszh.wis.quartz.model.StaticValue;
-import com.gszh.wis.quartz.model.TaskJobState;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -19,13 +18,12 @@ public class AllTriggerListener implements TriggerListener {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    @Autowired
     private TaskJobStateDAO taskJobStateDAO;
+//    private TaskJobState po;
+//    private TaskJobState poRely;
 
-    private TaskJobState po;
-    private TaskJobState poRely;
-
-    public AllTriggerListener() {
+    public AllTriggerListener(TaskJobStateDAO taskJobStateDAO) {
+        this.taskJobStateDAO = taskJobStateDAO;
     }
 
     public String getName() {
@@ -36,14 +34,12 @@ public class AllTriggerListener implements TriggerListener {
     public void triggerFired(Trigger trigger, JobExecutionContext context) {
         logger.info(trigger.getKey() + " fired!");
         insetState(trigger, StaticValue.TRIGGER_FIRED_NORMAL);
-
         JobDataMap jobDataMap = trigger.getJobDataMap();
-        Integer isRelyOn = jobDataMap.getInt(trigger.getKey() + "isRelyOn");
+        int isRelyOn =(Integer)jobDataMap.get(trigger.getKey() + "isRelyOn");
         if (isRelyOn == 0) {
             relyWait(trigger, context, jobDataMap);
         }
     }
-
 
 
     @Override
@@ -70,6 +66,7 @@ public class AllTriggerListener implements TriggerListener {
      * @param state
      */
     private void insetState(Trigger trigger, String state) {
+        TaskJobState po = new TaskJobState();
         po.setJobName(trigger.getKey().getName());
         po.setJobGroup(trigger.getKey().getGroup());
         po.setFireTime(trigger.getPreviousFireTime());
@@ -79,6 +76,7 @@ public class AllTriggerListener implements TriggerListener {
 
     /**
      * 依赖等待
+     *
      * @param trigger
      * @param context
      * @param jobDataMap
@@ -100,7 +98,7 @@ public class AllTriggerListener implements TriggerListener {
                     triggerKeys.add(triggerKey);
                 }
             }
-
+            TaskJobState poRely = new TaskJobState();
             //遍历依赖任务，等待依赖任务执行
             for (TriggerKey key : triggerKeys) {
                 boolean flag = true;
@@ -127,7 +125,7 @@ public class AllTriggerListener implements TriggerListener {
                         e.printStackTrace();
                     }
                 }
-                if (relyWaitTime !=null && relyWaitTime <0) {
+                if (relyWaitTime != null && relyWaitTime < 0) {
                     logger.error(key + " 等待超时！");
                 }
             }
