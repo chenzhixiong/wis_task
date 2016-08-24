@@ -12,6 +12,16 @@ public class TestMain {
 
     public static void main(String[] args) {
         //testTimeUse();
+        testStirngArr();
+    }
+
+    static void testStirngArr(){
+        String a="hheheh";
+        String b="bjijii;";
+        String[] c=a.split(";");
+        System.out.println(c[0]);
+        String[] d=b.split(";");
+        System.out.println(d[0]);
     }
 
     /**

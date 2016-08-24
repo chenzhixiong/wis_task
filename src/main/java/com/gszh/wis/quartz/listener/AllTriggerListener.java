@@ -35,7 +35,7 @@ public class AllTriggerListener implements TriggerListener {
         logger.info(trigger.getKey() + " fired!");
         insetState(trigger, StaticValue.TRIGGER_FIRED_NORMAL);
         JobDataMap jobDataMap = trigger.getJobDataMap();
-        int isRelyOn =(Integer)jobDataMap.get(trigger.getKey() + "isRelyOn");
+        int isRelyOn = (Integer) jobDataMap.get(trigger.getKey() + "isRelyOn");
         if (isRelyOn == 0) {
             relyWait(trigger, context, jobDataMap);
         }
@@ -88,7 +88,7 @@ public class AllTriggerListener implements TriggerListener {
             insetState(trigger, StaticValue.TRIGGER_FIRED_WAITING);
 
             //读取依赖任务信息，以及任务配置
-            Integer relyWaitTime = jobDataMap.getInt(trigger.getKey() + "relyWaitTime");
+
             String relyOn = jobDataMap.getString(trigger.getKey() + "relyOn");
             String[] relyArray = relyOn.split(";");
             List<TriggerKey> triggerKeys = new ArrayList<TriggerKey>();
@@ -102,36 +102,42 @@ public class AllTriggerListener implements TriggerListener {
             //遍历依赖任务，等待依赖任务执行
             for (TriggerKey key : triggerKeys) {
                 boolean flag = true;
+                Integer relyWaitTime = jobDataMap.getInt(trigger.getKey() + "relyWaitTime");
                 //依赖任务信息补充
                 poRely.setJobName(key.getName());
                 poRely.setJobGroup(key.getGroup());
                 poRely.setJobState(StaticValue.TRIGGER_FIRED_COMPLETE);
                 poRely.setFireTime(trigger.getPreviousFireTime());
                 poRely.setRecordTime(new Date(trigger.getPreviousFireTime().getTime() - (trigger.getNextFireTime().getTime() - trigger.getPreviousFireTime().getTime())));
-                //查询依赖任务是否执行
-                if (this.taskJobStateDAO.getStateCount(poRely) == 1) {
-                    flag = false;
-                }
+
                 //依赖任务执行完成或等待超时，将跳出 while 循环
-                while (flag || relyWaitTime == -1) {
+                while (true) {
                     try {
-                        Thread.sleep(60000);
                         //查询依赖任务是否执行
                         if (this.taskJobStateDAO.getStateCount(poRely) == 1) {
                             flag = false;
+                            break;
                         }
                         relyWaitTime--;
+                        if (relyWaitTime == -1) {
+                            logger.error(key + " 等待超时！");
+                            insetState(trigger,StaticValue.TRIGGER_FIRED_WAITING_OUT+key);
+                            break;
+                        }
+                        Thread.sleep(60000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
-                if (relyWaitTime != null && relyWaitTime < 0) {
-                    logger.error(key + " 等待超时！");
-                }
+
             }
             context.getScheduler().resumeTrigger(trigger.getKey());
         } catch (SchedulerException e) {
             e.printStackTrace();
+        } finally {
+            //多线程中，告知 C3p0 操作结束，停止 logback 日志向缓冲区输出任何内容
+            //如果没做这个响应将会导致日志异常打印
+            return;
         }
     }
 }
