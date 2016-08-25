@@ -1,6 +1,6 @@
-package com.gszh.wis.quartz.dao;
+package com.gszh.wis.tsp.dao;
 
-import com.gszh.wis.quartz.model.TaskJobParam;
+import com.gszh.wis.tsp.model.TaskJobParam;
 import java.util.List;
 
 /**

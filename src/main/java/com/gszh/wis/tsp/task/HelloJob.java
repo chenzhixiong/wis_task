@@ -1,4 +1,4 @@
-package com.gszh.wis.quartz.task;
+package com.gszh.wis.tsp.task;
 
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
@@ -18,7 +18,7 @@ public class HelloJob implements Job {
     Logger logger= LoggerFactory.getLogger(this.getClass());
 
     @Override
-    public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
+    public void execute(JobExecutionContext context) throws JobExecutionException {
         //测试任务
         this.logger.debug(this.getClass().getName()+" trigger...");
 

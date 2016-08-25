@@ -1,14 +1,14 @@
-package com.gszh.wis.quartz.service.impl;
+package com.gszh.wis.tsp.service.impl;
 
-import com.gszh.wis.quartz.dao.TaskJobCronDAO;
-import com.gszh.wis.quartz.dao.TaskJobParamDAO;
-import com.gszh.wis.quartz.dao.TaskJobStateDAO;
-import com.gszh.wis.quartz.listener.AllJobListener;
-import com.gszh.wis.quartz.listener.AllTriggerListener;
-import com.gszh.wis.quartz.listener.MySchedulerListener;
-import com.gszh.wis.quartz.model.TaskJobCron;
-import com.gszh.wis.quartz.model.TaskJobParam;
-import com.gszh.wis.quartz.service.TaskJobManageService;
+import com.gszh.wis.tsp.dao.TaskJobCronDAO;
+import com.gszh.wis.tsp.dao.TaskJobParamDAO;
+import com.gszh.wis.tsp.dao.TaskJobStateDAO;
+import com.gszh.wis.tsp.listener.AllJobListener;
+import com.gszh.wis.tsp.listener.AllTriggerListener;
+import com.gszh.wis.tsp.listener.MySchedulerListener;
+import com.gszh.wis.tsp.model.TaskJobCron;
+import com.gszh.wis.tsp.model.TaskJobParam;
+import com.gszh.wis.tsp.service.TaskJobManageService;
 import org.quartz.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

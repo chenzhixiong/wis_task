@@ -1,6 +1,6 @@
-package com.gszh.wis.quartz.listener;
+package com.gszh.wis.tsp.listener;
 
-import com.gszh.wis.quartz.service.TaskJobManageService;
+import com.gszh.wis.tsp.service.TaskJobManageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;

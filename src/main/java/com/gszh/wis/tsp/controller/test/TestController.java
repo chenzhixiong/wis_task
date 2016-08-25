@@ -1,14 +1,12 @@
-package com.gszh.wis.quartz.controller.test;
+package com.gszh.wis.tsp.controller.test;
 
-import com.gszh.wis.quartz.dao.TaskJobCronDAO;
-import com.gszh.wis.quartz.dao.TaskJobStateDAO;
-import com.gszh.wis.quartz.model.StaticValue;
-import com.gszh.wis.quartz.model.TaskJobCron;
-import com.gszh.wis.quartz.model.TaskJobParam;
-import com.gszh.wis.quartz.model.TaskJobState;
-import com.gszh.wis.quartz.service.TaskJobCronService;
-import com.gszh.wis.quartz.service.TaskJobManageService;
-import org.quartz.JobDataMap;
+import com.gszh.wis.tsp.dao.TaskJobCronDAO;
+import com.gszh.wis.tsp.dao.TaskJobStateDAO;
+import com.gszh.wis.tsp.model.StaticValue;
+import com.gszh.wis.tsp.model.TaskJobCron;
+import com.gszh.wis.tsp.model.TaskJobState;
+import com.gszh.wis.tsp.service.TaskJobCronService;
+import com.gszh.wis.tsp.service.TaskJobManageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;

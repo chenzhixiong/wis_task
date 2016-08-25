@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.gszh.wis.quartz.dao.TaskJobParamDAO">
+<mapper namespace="com.gszh.wis.tsp.dao.TaskJobParamDAO">
     <!-- 查询任务执行需要的参数 -->
-    <select id="getJobParam" parameterType="com.gszh.wis.quartz.model.TaskJobParam" resultType="com.gszh.wis.quartz.model.TaskJobParam">
+    <select id="getJobParam" parameterType="com.gszh.wis.tsp.model.TaskJobParam" resultType="com.gszh.wis.tsp.model.TaskJobParam">
         select * from task_job_param where 1=1
         <if test="jobName !=null and jobName!=''">
             AND job_name=#{jobName}

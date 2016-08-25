@@ -264,8 +264,8 @@ CREATE TABLE task_job_cron (
 -- ----------------------------
 -- Records of task_job_cron
 -- ----------------------------
-INSERT INTO task_job_cron VALUES ('1', 'job1', 'group1', 'com.gszh.wis.quartz.task.HelloJob', null, '0/15 * * * * ?', '5', '0', '0', '0', '0', 'group1.job2', null, null, null, '测试', '2016-08-08 12:00:55', '2016-08-23 10:50:59', null, null);
-INSERT INTO task_job_cron VALUES ('2', 'job2', 'group1', 'com.gszh.wis.quartz.task.SecondJob', null, '0/15 * * * * ?', '5', '0', '0', '1', '0', '', null, null, null, '', '2016-08-08 12:00:55', '2016-08-23 10:56:42', null, null);
+INSERT INTO task_job_cron VALUES ('1', 'job1', 'group1', 'com.gszh.wis.tsp.task.HelloJob', null, '0/15 * * * * ?', '5', '0', '0', '0', '0', 'group1.job2', null, null, null, '测试', '2016-08-08 12:00:55', '2016-08-23 10:50:59', null, null);
+INSERT INTO task_job_cron VALUES ('2', 'job2', 'group1', 'com.gszh.wis.tsp.task.SecondJob', null, '0/15 * * * * ?', '5', '0', '0', '1', '0', '', null, null, null, '', '2016-08-08 12:00:55', '2016-08-23 10:56:42', null, null);
 
 -- ----------------------------
 -- Table structure for task_job_param

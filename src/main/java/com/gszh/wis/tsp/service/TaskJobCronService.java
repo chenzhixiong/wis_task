@@ -1,6 +1,6 @@
-package com.gszh.wis.quartz.service;
+package com.gszh.wis.tsp.service;
 
-import com.gszh.wis.quartz.model.TaskJobCron;
+import com.gszh.wis.tsp.model.TaskJobCron;
 
 import java.util.List;
 

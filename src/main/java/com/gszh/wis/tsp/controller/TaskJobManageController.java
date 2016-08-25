@@ -1,10 +1,10 @@
-package com.gszh.wis.quartz.controller;
+package com.gszh.wis.tsp.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
-import com.gszh.wis.quartz.model.TaskJobCron;
-import com.gszh.wis.quartz.service.TaskJobManageService;
+import com.gszh.wis.tsp.model.TaskJobCron;
+import com.gszh.wis.tsp.service.TaskJobManageService;
 
 /**
  * 定时任务管理器

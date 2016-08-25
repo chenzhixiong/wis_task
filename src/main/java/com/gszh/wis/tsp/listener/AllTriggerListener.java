@@ -1,14 +1,13 @@
-package com.gszh.wis.quartz.listener;
+package com.gszh.wis.tsp.listener;
 
-import com.gszh.wis.quartz.dao.TaskJobStateDAO;
-import com.gszh.wis.quartz.model.StaticValue;
-import com.gszh.wis.quartz.model.TaskJobState;
+import com.gszh.wis.tsp.dao.TaskJobStateDAO;
+import com.gszh.wis.tsp.model.StaticValue;
+import com.gszh.wis.tsp.model.TaskJobState;
 import org.quartz.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -19,8 +18,8 @@ public class AllTriggerListener implements TriggerListener {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private TaskJobStateDAO taskJobStateDAO;
-//    private TaskJobState po;
-//    private TaskJobState poRely;
+    private TaskJobState po = new TaskJobState();
+    private TaskJobState poRely = new TaskJobState();
 
     public AllTriggerListener(TaskJobStateDAO taskJobStateDAO) {
         this.taskJobStateDAO = taskJobStateDAO;
@@ -55,8 +54,8 @@ public class AllTriggerListener implements TriggerListener {
 
     @Override
     public void triggerComplete(Trigger trigger, JobExecutionContext context, Trigger.CompletedExecutionInstruction triggerInstructionCode) {
-        logger.info(trigger.getKey() + " complete!");
         insetState(trigger, StaticValue.TRIGGER_FIRED_COMPLETE);
+        logger.info(trigger.getKey() + " complete!");
     }
 
     /**
@@ -66,7 +65,7 @@ public class AllTriggerListener implements TriggerListener {
      * @param state
      */
     private void insetState(Trigger trigger, String state) {
-        TaskJobState po = new TaskJobState();
+//        TaskJobState po = new TaskJobState();
         po.setJobName(trigger.getKey().getName());
         po.setJobGroup(trigger.getKey().getGroup());
         po.setFireTime(trigger.getPreviousFireTime());
@@ -98,7 +97,7 @@ public class AllTriggerListener implements TriggerListener {
                     triggerKeys.add(triggerKey);
                 }
             }
-            TaskJobState poRely = new TaskJobState();
+//            TaskJobState poRely = new TaskJobState();
             //遍历依赖任务，等待依赖任务执行
             for (TriggerKey key : triggerKeys) {
                 boolean flag = true;
@@ -108,8 +107,8 @@ public class AllTriggerListener implements TriggerListener {
                 poRely.setJobGroup(key.getGroup());
                 poRely.setJobState(StaticValue.TRIGGER_FIRED_COMPLETE);
                 poRely.setFireTime(trigger.getPreviousFireTime());
-                poRely.setRecordTime(new Date(trigger.getPreviousFireTime().getTime() - (trigger.getNextFireTime().getTime() - trigger.getPreviousFireTime().getTime())));
-
+//                poRely.setRecordTime(new Date(trigger.getPreviousFireTime().getTime() - (trigger.getNextFireTime().getTime() - trigger.getPreviousFireTime().getTime())));
+                poRely.setRecordTime(context.getPreviousFireTime());
                 //依赖任务执行完成或等待超时，将跳出 while 循环
                 while (true) {
                     try {
@@ -121,7 +120,7 @@ public class AllTriggerListener implements TriggerListener {
                         relyWaitTime--;
                         if (relyWaitTime == -1) {
                             logger.error(key + " 等待超时！");
-                            insetState(trigger,StaticValue.TRIGGER_FIRED_WAITING_OUT+key);
+                            insetState(trigger, StaticValue.TRIGGER_FIRED_WAITING_OUT + key);
                             break;
                         }
                         Thread.sleep(60000);

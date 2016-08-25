@@ -1,6 +1,6 @@
-package com.gszh.wis.quartz.dao;
+package com.gszh.wis.tsp.dao;
 
-import com.gszh.wis.quartz.model.TaskJobState;
+import com.gszh.wis.tsp.model.TaskJobState;
 
 /**
  * Created by chenzhixiong on 2016/8/18.

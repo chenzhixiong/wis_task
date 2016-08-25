@@ -1,4 +1,4 @@
-package com.gszh.wis.quartz.model;
+package com.gszh.wis.tsp.model;
 
 /**
  * Created by chenzhixiong on 2016/8/18.

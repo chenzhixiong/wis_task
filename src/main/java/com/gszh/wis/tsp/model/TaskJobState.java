@@ -1,4 +1,4 @@
-package com.gszh.wis.quartz.model;
+package com.gszh.wis.tsp.model;
 
 import java.util.Date;
 
