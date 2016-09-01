@@ -8,6 +8,7 @@ import org.quartz.JobExecutionException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 测试任务执行时间在6-9s之间
@@ -18,7 +19,8 @@ public class SecondJob implements Job{
     /**
      * 测试执行时间
      */
-    private static void testTimeUse() {
+    private static void test(Map<String,Object> map) {
+
         System.out.println(new Date());
         long flag=1L;
         List<Long> list= new ArrayList<Long>();
@@ -33,6 +35,7 @@ public class SecondJob implements Job{
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        testTimeUse();
+        Map<String, Object> map = context.getMergedJobDataMap().getWrappedMap();
+        test(map);
     }
 }

@@ -8,7 +8,9 @@ import com.gszh.wis.tsp.listener.AllTriggerListener;
 import com.gszh.wis.tsp.listener.MySchedulerListener;
 import com.gszh.wis.tsp.model.TaskJobCron;
 import com.gszh.wis.tsp.model.TaskJobParam;
+import com.gszh.wis.tsp.model.TaskJobState;
 import com.gszh.wis.tsp.service.TaskJobManageService;
+import com.gszh.wis.tsp.task.base.ControllableJob;
 import org.quartz.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,10 +63,12 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
         try {
             //清空定时任务队列，重新从数据库中读取任务列表
             scheduler.clear();
+            //清空 qrtz_* 的表
             List<TaskJobCron> list = this.taskJobCronDAO.getAll();
+            this.taskJobCronDAO.clearDB();
             if (list != null && list.size() > 0) {
                 for (TaskJobCron po : list) {
-                    if (po.getIfBoot() == 0)
+                    if (po.getIfBoot() == 1)
                         addCronTaskToScheduler(po);
                 }
             }
@@ -179,6 +183,7 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
     public void addCronTaskToScheduler(TaskJobCron po) {
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
         try {
+            scheduler.start();
             JobDataMap parameters = new JobDataMap();
             //获取实体类参数
             parameters = getJobParam(po);
@@ -193,13 +198,29 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
             //若任务已存在，则更新配置，若不存在，则创建一个
             if (scheduler.checkExists(jobKey)) {
                 jobDetail = scheduler.getJobDetail(jobKey).getJobBuilder()
-                        .newJob((Class<? extends Job>) Class.forName(po.getEntityClass()))
+                        .newJob((Class<? extends Job>) Class.forName(po.getJobClass()))
                         .withIdentity(jobKey)
+                        .usingJobData("entityClass", po.getEntityClass())
+                        .usingJobData("jobFile", po.getJobFile())
+                        .usingJobData("jobChName", po.getJobChName())
+                        .usingJobData("username", po.getUsername())
+                        .usingJobData("password", po.getPassword())
                         .build();
+                if (parameters != null && !parameters.isEmpty()) {
+                    jobDetail.getJobDataMap().putAll(parameters);
+                }
             } else {
-                jobDetail = JobBuilder.newJob((Class<? extends Job>) Class.forName(po.getEntityClass()))
+                jobDetail = JobBuilder.newJob((Class<? extends Job>) Class.forName(po.getJobClass()))
                         .withIdentity(jobKey)
+                        .usingJobData("entityClass", po.getEntityClass())
+                        .usingJobData("jobFile", po.getJobFile())
+                        .usingJobData("jobChName", po.getJobChName())
+                        .usingJobData("username", po.getUsername())
+                        .usingJobData("password", po.getPassword())
                         .build();
+                if (parameters != null && !parameters.isEmpty()) {
+                    jobDetail.getJobDataMap().putAll(parameters);
+                }
             }
 
             /*设置 cronExpression 表达式*/
@@ -234,9 +255,6 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
                         .startAt(po.getStartTime() != null ? po.getStartTime() : new Date())
                         .endAt(po.getEndTime())
                         .build();
-                if(parameters!=null&&!parameters.isEmpty()){
-                    trigger.getJobDataMap().putAll(parameters);
-                }
             } else {
                 trigger = (CronTrigger) TriggerBuilder.newTrigger()
                         .withIdentity(triggerKey)
@@ -248,9 +266,6 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
                         .startAt(po.getStartTime() != null ? po.getStartTime() : new Date())
                         .endAt(po.getEndTime())
                         .build();
-                if(parameters!=null&&!parameters.isEmpty()){
-                    trigger.getJobDataMap().putAll(parameters);
-                }
             }
 
             //任务注册到调度程序中
@@ -264,17 +279,109 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
     }
 
     /**
+     * 暂停实例
+     *
+     * @param instanceNo
+     */
+    @Override
+    public void pasueInstance(String instanceNo) {
+        workInstance(instanceNo, 0);
+    }
+
+    /**
+     * 恢复实例
+     *
+     * @param instanceNo
+     */
+    @Override
+    public void resumeInstance(String instanceNo) {
+        workInstance(instanceNo, 1);
+    }
+
+    /**
+     * 停止实例
+     *
+     * @param instanceNo
+     */
+    @Override
+    public void stopInstance(String instanceNo) {
+        workInstance(instanceNo, 2);
+    }
+
+    /**
+     * 对任务实例的操作（线程）
+     *
+     * @param instanceNo
+     * @param flag
+     */
+    private void workInstance(String instanceNo, int flag) {
+        Scheduler scheduler = schedulerFactoryBean.getScheduler();
+        TaskJobState po = new TaskJobState();
+        po.setInstanceNo(instanceNo);
+        List<TaskJobState> list = this.taskJobStateDAO.getState(po);
+        if (list != null && list.size() > 0){
+            po = list.get(0);
+        }
+        try {
+            //判断 实例是否存在
+            if (po != null && po.getJobName()!=null && po.getJobGroup()!=null
+                    && !"".equals(po.getJobName().trim()) && !"".equals(po.getJobGroup().trim())) {
+                JobKey key=JobKey.jobKey(po.getJobName(),po.getJobGroup());
+                Date fireTime = po.getFireTime();
+                List<JobExecutionContext> jobs = scheduler.getCurrentlyExecutingJobs();
+                System.out.println(jobs);
+                JobDetail jobDetail = null;
+                Job job = null;
+                //遍历正在运行的实例，查找 instanceNo 对应的实例
+                for (JobExecutionContext jec : jobs) {
+                    jobDetail = jec.getJobDetail();
+                    System.out.println(jec.getFireTime().getTime());
+                    System.out.println(fireTime.getTime());
+                    if (key.equals(jobDetail.getKey()) && jec.getFireTime().getTime()-fireTime.getTime()<1000) {
+                        job = jec.getJobInstance();
+                        if (job instanceof ControllableJob) {
+                            switch (flag) {
+                                case 0:
+                                    ((ControllableJob) job).pasueInstance();
+                                    break;
+                                case 1:
+                                    ((ControllableJob) job).resumeInstance();
+                                    break;
+                                case 2:
+                                    ((ControllableJob) job).stopInstance();
+                                    break;
+                                default:
+                                    break;
+                            }
+                        } else {
+                            throw new UnableToInterruptJobException(
+                                    "Job " + jobDetail.getKey() +
+                                            " can not be controlled, it did not implemented the interface ControllableJob " +
+                                            InterruptableJob.class.getName());
+                        }
+                    }
+                }
+            } else{
+                logger.error("The instance of instanceNo("+instanceNo+") is not exist!");
+            }
+        } catch (SchedulerException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * 查询任务类的参数
+     *
      * @param po
      * @return
      */
     private JobDataMap getJobParam(TaskJobCron po) {
         JobDataMap parameters = new JobDataMap();
-        TaskJobParam paramPo=new TaskJobParam(po.getJobName(),po.getJobGroup());
+        TaskJobParam paramPo = new TaskJobParam(po.getJobName(), po.getJobGroup());
         List<TaskJobParam> list = this.taskJobParamDAO.getJobParam(paramPo);
-        if(list!=null && list.size()>0){
-            for(TaskJobParam param:list){
-                parameters.put(param.getParamName(),param.getParamValue());
+        if (list != null && list.size() > 0) {
+            for (TaskJobParam param : list) {
+                parameters.put(param.getParamName(), param.getParamValue());
             }
         }
         return parameters;

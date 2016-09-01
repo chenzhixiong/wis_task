@@ -2,6 +2,31 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.gszh.wis.tsp.dao.TaskJobCronDAO">
 
+    <!--<resultMap id="cronMap" type="com.gszh.wis.tsp.model.TaskJobCron">-->
+        <!--<result column="id" property="id" jdbcType="INTEGER" />-->
+        <!--<result column="job_name" property="jobName" jdbcType="VARCHAR" />-->
+        <!--<result column="job_group" property="jobGroup" jdbcType="VARCHAR" />-->
+        <!--<result column="job_ch_name" property="jobChName" jdbcType="VARCHAR" />-->
+        <!--<result column="job_file" property="jobFile" jdbcType="VARCHAR" />-->
+        <!--<result column="job_class" property="jobClass" jdbcType="VARCHAR" />-->
+        <!--<result column="entity_class" property="entityClass" jdbcType="VARCHAR" />-->
+        <!--<result column="cron_expression" property="cronExpression" jdbcType="VARCHAR" />-->
+        <!--<result column="priority" property="priority" jdbcType="INTEGER" />-->
+        <!--<result column="misfire" property="misfire" jdbcType="INTEGER" />-->
+        <!--<result column="if_boot" property="ifBoot" jdbcType="INTEGER" />-->
+        <!--<result column="is_rely_on" property="isRelyOn" jdbcType="INTEGER" />-->
+        <!--<result column="rely_wait_time" property="relyWaitTime" jdbcType="INTEGER" />-->
+        <!--<result column="rely_on" property="RelyOn" jdbcType="VARCHAR" />-->
+        <!--<result column="start_time" property="startTime" jdbcType="TIMESTAMP" />-->
+        <!--<result column="end_time" property="endTime" jdbcType="TIMESTAMP" />-->
+        <!--<result column="job_type" property="jobType" jdbcType="VARCHAR" />-->
+        <!--<result column="description" property="description" jdbcType="VARCHAR" />-->
+        <!--<result column="create_time" property="createTime" jdbcType="TIMESTAMP" />-->
+        <!--<result column="update_time" property="updateTime" jdbcType="TIMESTAMP" />-->
+        <!--<result column="username" property="username" jdbcType="VARCHAR" />-->
+        <!--<result column="password" property="password" jdbcType="VARCHAR" />-->
+    <!--</resultMap>-->
+
     <select id="getAll" resultType="com.gszh.wis.tsp.model.TaskJobCron">
         select * from task_job_cron 
     </select>
@@ -16,6 +41,9 @@
         </if>
         <if test="jobGroup !=null and jobGroup!=''">
             AND job_group=#{jobGroup}
+        </if>
+        <if test="jobClass !=null and jobClass!=''">
+            AND job_class=#{jobClass}
         </if>
         <if test="entityClass !=null and entityClass!=''">
             AND entity_class=#{entityClass}
@@ -36,6 +64,9 @@
             id,
             job_name,
             job_group,
+            job_ch_name,
+            job_file,
+            jobClass,
             entity_class,
             cron_expression,
             priority,
@@ -50,13 +81,16 @@
             description,
             create_time,
             update_time,
-            creater,
-            updater
+            username,
+            password
         )
         VALUES
             (
                 #{jobName},
                 #{jobGroup},
+                #{jobChName},
+                #{jobFile},
+                #{jobClass},
                 #{entityClass},
                 #{cronExpression},
                 #{priority},
@@ -69,14 +103,17 @@
                 #{endTime},
                 #{jobType},
                 #{description},
-                #{creater},
-                #{updater}
+                #{username},
+                #{password}
             );
     </insert>
 
     <update id="update" parameterType="com.gszh.wis.tsp.model.TaskJobCron">
         UPDATE task_job_cron
         SET
+            job_ch_name=#{jobChName},
+            job_file=#{jobFile},
+            job_class=#{jobClass},
             entity_class=#{entityClass},
             cron_expression=#{cronExpression},
             priority=#{priority},
@@ -89,8 +126,8 @@
             end_time=#{endTime},
             job_type=#{jobType},
             description=#{description},
-            create_time=#{creater},
-            update_time=#{updater}
+            create_time=#{username},
+            update_time=#{password}
         WHERE
             job_name=#{jobName} AND
             job_group=#{jobGroup}
@@ -102,5 +139,10 @@
             job_name=#{jobName} AND
             job_group=#{jobGroup}
     </delete>
+
+    <!-- 存储过程：清空 qrtz_* 的表 -->
+    <update id="clearDB">
+        call taskscheduler.clearDB()
+    </update>
 </mapper>
 

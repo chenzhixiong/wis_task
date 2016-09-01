@@ -1,7 +1,7 @@
 package com.gszh.wis.tsp.listener;
 
 import com.gszh.wis.tsp.dao.TaskJobStateDAO;
-import com.gszh.wis.tsp.model.StaticValue;
+import com.gszh.wis.tsp.model.StaticClass;
 import com.gszh.wis.tsp.model.TaskJobState;
 import org.quartz.*;
 import org.slf4j.Logger;
@@ -32,10 +32,10 @@ public class AllTriggerListener implements TriggerListener {
     @Override
     public void triggerFired(Trigger trigger, JobExecutionContext context) {
         logger.info(trigger.getKey() + " fired!");
-        insetState(trigger, StaticValue.TRIGGER_FIRED_NORMAL);
+        insetState(trigger, StaticClass.TRIGGER_FIRED_NORMAL);
         JobDataMap jobDataMap = trigger.getJobDataMap();
         int isRelyOn = (Integer) jobDataMap.get(trigger.getKey() + "isRelyOn");
-        if (isRelyOn == 0) {
+        if (isRelyOn > 0) {
             relyWait(trigger, context, jobDataMap);
         }
     }
@@ -49,12 +49,12 @@ public class AllTriggerListener implements TriggerListener {
     @Override
     public void triggerMisfired(Trigger trigger) {
         logger.error(trigger.getKey() + " misfired");
-        insetState(trigger, StaticValue.TRIGGER_FIRED_EXCEPTION);
+        insetState(trigger, StaticClass.TRIGGER_FIRED_EXCEPTION);
     }
 
     @Override
     public void triggerComplete(Trigger trigger, JobExecutionContext context, Trigger.CompletedExecutionInstruction triggerInstructionCode) {
-        insetState(trigger, StaticValue.TRIGGER_FIRED_COMPLETE);
+        insetState(trigger, StaticClass.TRIGGER_FIRED_COMPLETE);
         logger.info(trigger.getKey() + " complete!");
     }
 
@@ -70,6 +70,7 @@ public class AllTriggerListener implements TriggerListener {
         po.setJobGroup(trigger.getKey().getGroup());
         po.setFireTime(trigger.getPreviousFireTime());
         po.setJobState(state);
+        po.setInstanceNo(StaticClass.md5Str(trigger.getKey()+trigger.getPreviousFireTime().toString()));
         int i = this.taskJobStateDAO.insert(po);
     }
 
@@ -84,7 +85,7 @@ public class AllTriggerListener implements TriggerListener {
         try {
             //存在依赖，暂停任务，并记录
             context.getScheduler().pauseTrigger(trigger.getKey());
-            insetState(trigger, StaticValue.TRIGGER_FIRED_WAITING);
+            insetState(trigger, StaticClass.TRIGGER_FIRED_WAITING);
 
             //读取依赖任务信息，以及任务配置
 
@@ -105,7 +106,7 @@ public class AllTriggerListener implements TriggerListener {
                 //依赖任务信息补充
                 poRely.setJobName(key.getName());
                 poRely.setJobGroup(key.getGroup());
-                poRely.setJobState(StaticValue.TRIGGER_FIRED_COMPLETE);
+                poRely.setJobState(StaticClass.TRIGGER_FIRED_COMPLETE);
                 poRely.setFireTime(trigger.getPreviousFireTime());
 //                poRely.setRecordTime(new Date(trigger.getPreviousFireTime().getTime() - (trigger.getNextFireTime().getTime() - trigger.getPreviousFireTime().getTime())));
                 poRely.setRecordTime(context.getPreviousFireTime());
@@ -120,7 +121,7 @@ public class AllTriggerListener implements TriggerListener {
                         relyWaitTime--;
                         if (relyWaitTime == -1) {
                             logger.error(key + " 等待超时！");
-                            insetState(trigger, StaticValue.TRIGGER_FIRED_WAITING_OUT + key);
+                            insetState(trigger, StaticClass.TRIGGER_FIRED_WAITING_OUT + key);
                             break;
                         }
                         Thread.sleep(60000);

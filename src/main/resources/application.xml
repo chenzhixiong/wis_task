@@ -25,6 +25,13 @@
         <property name="jdbcUrl" value="${jdbc.url}"/>
         <property name="user" value="${jdbc.username}"/>
         <property name="password" value="${jdbc.password}"/>
+
+        <!--连接池最小空闲-->
+        <property name="minPoolSize" value="${jdbc.pool.minPoolSize}" />
+        <!--连接池最大-->
+        <property name="maxPoolSize" value="${jdbc.pool.maxPoolSize}" />
+        <!--初始化大小-->
+        <property name="initialPoolSize" value="${jdbc.pool.initialPoolSize}" />
     </bean>
 
     <!-- 扫描basePackage接口 -->
@@ -71,6 +78,17 @@
         <property name="mapperLocations" value="classpath:mapper/*.xml"></property>
     </bean>
 
+    <!-- 开机自启 -->
+    <bean id = "bootManageListener" class="com.gszh.wis.tsp.listener.BootManageListener"></bean>
+
     <!-- spring3.1以上整合 quartz2.x 只需配置 schedulerFactoryBean -->
-    <bean id="schedulerFactoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean"></bean>
+    <bean id="schedulerFactoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+        <property name="dataSource" ref="dataSource" />
+        <property name="configLocation" value="classpath:quartz.properties" />
+        <!--applicationContextSchedulerContextKey：
+        是org.springframework.scheduling.quartz.SchedulerFactoryBean这个类中
+        把spring上下 文以key/value的方式存放在了quartz的上下文中了，
+        可以用applicationContextSchedulerContextKey所定义的key得到对应的spring上下文-->
+        <property name="applicationContextSchedulerContextKey" value="applicationContextKey"/>
+    </bean>
 </beans>

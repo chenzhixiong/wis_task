@@ -78,9 +78,9 @@ public class TaskJobState {
                 ", instanceNo='" + instanceNo + '\'' +
                 ", jobName='" + jobName + '\'' +
                 ", jobGroup='" + jobGroup + '\'' +
-                ", fireTime='" + fireTime + '\'' +
-                ", jobState=" + jobState +
-                ", recordTime='" + recordTime + '\'' +
+                ", fireTime=" + fireTime +
+                ", jobState='" + jobState + '\'' +
+                ", recordTime=" + recordTime +
                 '}';
     }
 }

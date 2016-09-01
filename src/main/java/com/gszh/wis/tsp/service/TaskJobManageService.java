@@ -1,6 +1,9 @@
 package com.gszh.wis.tsp.service;
 
 import com.gszh.wis.tsp.model.TaskJobCron;
+import org.quartz.JobKey;
+
+import java.util.Date;
 
 /**
  * Created by chenzhixiong on 2016/8/11.
@@ -31,6 +34,7 @@ public interface TaskJobManageService {
 
     /**
      * 修改任务
+     *
      * @param po
      */
     void updateOne(TaskJobCron po);
@@ -57,5 +61,23 @@ public interface TaskJobManageService {
      * scheduler 注册任务
      */
     void addCronTaskToScheduler(TaskJobCron po);
+
+    /**
+     * 暂停实例
+     * @param instanceNo
+     */
+    void pasueInstance(String instanceNo);
+
+    /**
+     * 恢复实例
+     * @param instanceNo
+     */
+    void resumeInstance(String instanceNo);
+
+    /**
+     * 停止实例
+     * @param instanceNo
+     */
+    void stopInstance(String instanceNo);
 
 }

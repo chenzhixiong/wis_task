@@ -11,12 +11,14 @@ public interface TaskJobCronDAO {
 
     /**
      * 查询 cron定时任务 列表
+     *
      * @return
      */
     List<TaskJobCron> getAll();
 
     /**
      * 查询指定的 cron定时任务 信息
+     *
      * @param po
      * @return
      */
@@ -24,6 +26,7 @@ public interface TaskJobCronDAO {
 
     /**
      * 添加一个新的任务
+     *
      * @param po
      * @return
      */
@@ -31,6 +34,7 @@ public interface TaskJobCronDAO {
 
     /**
      * 更新任务配置
+     *
      * @param po
      * @return
      */
@@ -38,8 +42,14 @@ public interface TaskJobCronDAO {
 
     /**
      * 删除任务
+     *
      * @param po
      * @return
      */
     int delete(TaskJobCron po);
+
+    /**
+     * 存储过程：清空 qrtz_* 的表
+     */
+    void clearDB();
 }

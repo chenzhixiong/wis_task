@@ -2,7 +2,7 @@ package com.gszh.wis.tsp.controller.test;
 
 import com.gszh.wis.tsp.dao.TaskJobCronDAO;
 import com.gszh.wis.tsp.dao.TaskJobStateDAO;
-import com.gszh.wis.tsp.model.StaticValue;
+import com.gszh.wis.tsp.model.StaticClass;
 import com.gszh.wis.tsp.model.TaskJobCron;
 import com.gszh.wis.tsp.model.TaskJobState;
 import com.gszh.wis.tsp.service.TaskJobCronService;
@@ -56,7 +56,7 @@ public class TestController {
         po.setJobGroup("group");
         po.setJobName("job");
         po.setFireTime(new Date());
-        po.setJobState(StaticValue.TRIGGER_FIRED_COMPLETE);
+        po.setJobState(StaticClass.TRIGGER_FIRED_COMPLETE);
         int i = this.taskJobStateDAO.insert(po);
         System.out.println("success +"+i);
         System.out.println(this.taskJobStateDAO.getStateCount(po)+"======================");

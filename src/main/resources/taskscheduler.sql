@@ -235,44 +235,36 @@ CREATE TABLE qrtz_cron_triggers (
 -- ----------------------------
 -- Table structure for task_job_cron
 -- ----------------------------
-DROP TABLE IF EXISTS task_job_cron;
-CREATE TABLE task_job_cron (
+DROP TABLE IF EXISTS job_cron_triggers;
+CREATE TABLE job_cron_triggers (
   id int(11) NOT NULL AUTO_INCREMENT,
-  job_name varchar(50) NOT NULL COMMENT '任务名称\r\n注：任务分组，任务名称   字符串的拼接值是唯一的\r\n\r\n例如：已经插入了 一条记录 的 jobName 和 jobGroup 为 （job1,group1）,那么下次就无法再将 （job1,group1）插入， 而（job2,group1）或（job1,group2）却是允许插入的',
-  job_group varchar(50) NOT NULL COMMENT '任务分组\r\n注：任务分组，任务名称   字符串的拼接值是唯一的\r\n\r\n例如：已经插入了 一条记录 的 jobName 和 jobGroup 为 （job1,group1）,那么下次就无法再将 （job1,group1）插入， 而（job2,group1）或（job1,group2）却是允许插入的',
-  entity_class varchar(200) NOT NULL COMMENT '任务类\r\n值为 全类名(完整包路径.类名) \r\n例如： com.gszh.HelloJob',
---  parameters varchar(500) DEFAULT NULL COMMENT '任务的入参；\r\n格式：\r\nkey:value;key:value;\r\nvalue 本身的类型需要任务实现类来解析。\r\n',
-  cron_expression varchar(20) NOT NULL COMMENT 'cron 时间表达式\r\n\r\n例如：0/5 * * * * ? 表示每5秒执行一次',
-  priority int(11) NOT NULL DEFAULT '5' COMMENT '任务优先权限\r\n默认为5\r\n两个任务在同一时间触发，值越大越优先执行\r\n1<=priority<=10',
-  misfire int(11) NOT NULL DEFAULT '0' COMMENT '错失触发时间后执行的方案，默认为0；\r\n      \r\n0：withMisfireHandlingInstructionDoNothing\r\n——不触发立即执行\r\n——等待下次Cron触发频率到达时刻开始按照Cron频率依次执行\r\n\r\n1：withMisfireHandlingInstructionIgnoreMisfires\r\n——以错过的第一个频率时间立刻开始执行\r\n——重做错过的所有频率周期后\r\n——当下一次触发频率发生时间大于当前时间后，再按照正常的Cron频率依次执行\r\n\r\n2：withMisfireHandlingInstructionFireAndProceed\r\n——以当前时间为触发频率立刻触发一次执行\r\n——然后按照Cron频率依次执行\r\n\r\n',
-  if_boot int(11) NOT NULL DEFAULT '0' COMMENT '是否开机启动，0：开机启动；1：手动启动',
-  is_rely_on int(11) NOT NULL COMMENT '是否存在任务依赖，0：存在；1：不存在',
-  rely_wait_time int(11) NOT NULL COMMENT '任务依赖等待时间，超时则取消等待\r\n等待时间设置需小于1h',
-  rely_on varchar(500) NOT NULL COMMENT '任务一级依赖；\r\n书写规范：任务分组.任务名称;\r\n样例：group1.job1;group2.job2;',
-  start_time timestamp NULL DEFAULT NULL COMMENT '任务启动时间（为空时，则默认为每次程序的启动时间）',
-  end_time timestamp NULL DEFAULT NULL COMMENT '任务结束时间（为null时，默认为不限制结束时间）',
-  job_type varchar(50) DEFAULT NULL COMMENT '任务类别',
+  job varchar(200) NOT NULL COMMENT '任务实体',
+  jobName varchar(100) NOT NULL COMMENT '任务标注名称',
+  jobGroup varchar(100) NOT NULL COMMENT '任务组',
+  triggerName varchar(100) NOT NULL COMMENT '触发器标注名称',
+  triggerGroup varchar(100) NOT NULL COMMENT '触发器组',
+  cronExpression varchar(20) NOT NULL COMMENT 'cron表达式',
   description varchar(200) DEFAULT NULL COMMENT '任务描述',
-  create_time timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  update_time timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
-  creater varchar(50) DEFAULT NULL COMMENT '任务添加者',
-  updater varchar(50) DEFAULT NULL COMMENT '任务修改者',
+  createTime timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  updateTime timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  creater varchar(255) DEFAULT NULL COMMENT '创建者',
+  ifBoot int(11) DEFAULT NULL COMMENT '是否开机自启（开机自启：0，非开机自启：1）',
   PRIMARY KEY (id),
-  UNIQUE KEY jobkey (job_name,job_group) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+  UNIQUE KEY jobKey (jobName,jobGroup),
+  UNIQUE KEY triggerKey (triggerName,triggerGroup)
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
--- Records of task_job_cron
+-- Records of job_cron_triggers
 -- ----------------------------
-INSERT INTO task_job_cron VALUES ('1', 'job1', 'group1', 'com.gszh.wis.tsp.task.HelloJob', null, '0/15 * * * * ?', '5', '0', '0', '0', '0', 'group1.job2', null, null, null, '测试', '2016-08-08 12:00:55', '2016-08-23 10:50:59', null, null);
-INSERT INTO task_job_cron VALUES ('2', 'job2', 'group1', 'com.gszh.wis.tsp.task.SecondJob', null, '0/15 * * * * ?', '5', '0', '0', '1', '0', '', null, null, null, '', '2016-08-08 12:00:55', '2016-08-23 10:56:42', null, null);
-
+INSERT INTO job_cron_triggers VALUES ('8', 'quartz.task.HelloJob', 'job1', 'group1', 'job1', 'group1', '0/10 * * * * ?', '测试', '2016-08-10 10:07:04', null, null, '0');
+INSERT INTO job_cron_triggers VALUES ('9', 'quartz.task.HelloJob2', 'job2', 'group1', 'job2', 'group1', '0/10 * * * * ?', '测试', '2016-08-10 10:07:04', '2016-08-10 10:49:25', '', '0');
 -- ----------------------------
 -- Table structure for task_job_param
 -- ----------------------------
 DROP TABLE IF EXISTS task_job_param;
 CREATE TABLE task_job_param (
-  id int(11) NOT NULL,
+  id int(11) NOT NULL AUTO_INCREMENT,
   job_name varchar(50) DEFAULT NULL COMMENT '任务名称',
   job_group varchar(50) DEFAULT NULL COMMENT '任务分组',
   param_name varchar(200) DEFAULT NULL COMMENT '参数名称',

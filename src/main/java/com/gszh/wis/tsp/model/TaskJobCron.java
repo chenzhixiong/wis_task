@@ -10,6 +10,9 @@ public class TaskJobCron {
     private Integer id;
     private String jobName;
     private String jobGroup;
+    private String jobChName;
+    private String jobFile;
+    private String jobClass;
     private String entityClass;
     private String cronExpression;
     private Integer priority;
@@ -24,8 +27,8 @@ public class TaskJobCron {
     private String description;
     private String createTime;
     private String updateTime;
-    private String creater;
-    private String updater;
+    private String username;
+    private String password;
 
     public Integer getId() {
         return id;
@@ -49,6 +52,30 @@ public class TaskJobCron {
 
     public void setJobGroup(String jobGroup) {
         this.jobGroup = jobGroup;
+    }
+
+    public String getJobChName() {
+        return jobChName;
+    }
+
+    public void setJobChName(String jobChName) {
+        this.jobChName = jobChName;
+    }
+
+    public String getJobFile() {
+        return jobFile;
+    }
+
+    public void setJobFile(String jobFile) {
+        this.jobFile = jobFile;
+    }
+
+    public String getJobClass() {
+        return jobClass;
+    }
+
+    public void setJobClass(String jobClass) {
+        this.jobClass = jobClass;
     }
 
     public String getEntityClass() {
@@ -163,20 +190,20 @@ public class TaskJobCron {
         this.updateTime = updateTime;
     }
 
-    public String getCreater() {
-        return creater;
+    public String getUsername() {
+        return username;
     }
 
-    public void setCreater(String creater) {
-        this.creater = creater;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
-    public String getUpdater() {
-        return updater;
+    public String getPassword() {
+        return password;
     }
 
-    public void setUpdater(String updater) {
-        this.updater = updater;
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     @Override
@@ -185,6 +212,9 @@ public class TaskJobCron {
                 "id=" + id +
                 ", jobName='" + jobName + '\'' +
                 ", jobGroup='" + jobGroup + '\'' +
+                ", jobChName='" + jobChName + '\'' +
+                ", jobFile='" + jobFile + '\'' +
+                ", jobClass='" + jobClass + '\'' +
                 ", entityClass='" + entityClass + '\'' +
                 ", cronExpression='" + cronExpression + '\'' +
                 ", priority=" + priority +
@@ -199,8 +229,8 @@ public class TaskJobCron {
                 ", description='" + description + '\'' +
                 ", createTime='" + createTime + '\'' +
                 ", updateTime='" + updateTime + '\'' +
-                ", creater='" + creater + '\'' +
-                ", updater='" + updater + '\'' +
+                ", username='" + username + '\'' +
+                ", password='" + password + '\'' +
                 '}';
     }
 }
