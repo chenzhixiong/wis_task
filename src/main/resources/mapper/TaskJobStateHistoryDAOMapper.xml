@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.gszh.wis.tsp.dao.TaskJobStateDAO">
+<mapper namespace="com.gszh.wis.tsp.dao.TaskJobStateHistoryDAO">
 
-    <update id="insert" parameterType="com.gszh.wis.tsp.model.TaskJobState">
-        INSERT INTO task_job_state (
+    <insert id="insert" parameterType="com.gszh.wis.tsp.model.TaskJobStateHistory">
+        INSERT INTO task_job_state_history (
             instance_no,
             job_name,
             job_group,
@@ -17,17 +17,15 @@
                 #{jobGroup},
                 #{fireTimeLong},
                 #{jobState}
-            )
-    </update>
+            );
+    </insert>
 
-    <update id="update" parameterType="com.gszh.wis.tsp.model.TaskJobState">
-        UPDATE task_job_state
-        SET job_state=#{jobState}
-        WHERE instance_no=#{instanceNo} AND job_state not in ('任务中断','结束完成')
-    </update>
+    <select id="getAll" resultType="com.gszh.wis.tsp.model.TaskJobStateHistory">
+        select * from task_job_state_history
+    </select>
 
-    <select id="getStateCount" parameterType="com.gszh.wis.tsp.model.TaskJobState" resultType="int">
-        select COUNT(*) from task_job_state where 1=1
+    <select id="getStateHistoryCount" parameterType="com.gszh.wis.tsp.model.TaskJobStateHistory" resultType="int">
+        select COUNT(*) from task_job_state_history where 1=1
         <if test="instanceNo !=null and instanceNo!=''">
             AND instance_no=#{instanceNo}
         </if>
@@ -38,7 +36,7 @@
             AND job_group=#{jobGroup}
         </if>
         <if test="jobState !=null and jobState!=''">
-            AND job_state=#{jobState}
+        AND job_state=#{jobState}
         </if>
         <!-- 这里的 larger 和 smaller 作传递参数使用 -->
         <if test="larger !=null and larger>0">
@@ -53,9 +51,8 @@
         </if>
     </select>
 
-    <select id="getState" parameterType="com.gszh.wis.tsp.model.TaskJobState"
-            resultType="com.gszh.wis.tsp.model.TaskJobState">
-        select * from task_job_state where 1=1
+    <select id="getStateHistory" parameterType="com.gszh.wis.tsp.model.TaskJobStateHistory" resultType="com.gszh.wis.tsp.model.TaskJobStateHistory">
+        select * from task_job_state_history where 1=1
         <if test="instanceNo !=null and instanceNo!=''">
             AND instance_no=#{instanceNo}
         </if>

@@ -16,9 +16,20 @@ public class EntityClass {
                 i++;
                 System.out.println("sleep "+i);
             }
+            Thread.sleep(1);
             System.out.println("---");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    public void pause(Map<String,Object> map){
+        System.out.println(map.size()+" pause");
+    }
+    public void resume(Map<String,Object> map){
+        System.out.println(map.size()+" resume");
+    }
+    public void stop(Map<String,Object> map){
+        System.out.println(map.size()+" stop");
     }
 }

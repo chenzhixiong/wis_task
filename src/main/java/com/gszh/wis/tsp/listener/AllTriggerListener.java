@@ -1,8 +1,9 @@
 package com.gszh.wis.tsp.listener;
 
-import com.gszh.wis.tsp.dao.TaskJobStateDAO;
 import com.gszh.wis.tsp.model.StaticClass;
 import com.gszh.wis.tsp.model.TaskJobState;
+import com.gszh.wis.tsp.model.TaskJobStateHistory;
+import com.gszh.wis.tsp.service.TaskJobStateService;
 import org.quartz.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,12 +18,14 @@ public class AllTriggerListener implements TriggerListener {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private TaskJobStateDAO taskJobStateDAO;
-    private TaskJobState po = new TaskJobState();
-    private TaskJobState poRely = new TaskJobState();
+    private TaskJobStateService taskJobStateService;
 
-    public AllTriggerListener(TaskJobStateDAO taskJobStateDAO) {
-        this.taskJobStateDAO = taskJobStateDAO;
+    private TaskJobStateHistory po = new TaskJobStateHistory();
+    private TaskJobStateHistory poRely = new TaskJobStateHistory();
+    private TaskJobState tj = new TaskJobState();
+
+    public AllTriggerListener(TaskJobStateService taskJobStateService) {
+        this.taskJobStateService=taskJobStateService;
     }
 
     public String getName() {
@@ -32,7 +35,10 @@ public class AllTriggerListener implements TriggerListener {
     @Override
     public void triggerFired(Trigger trigger, JobExecutionContext context) {
         logger.info(trigger.getKey() + " fired!");
-        insetState(trigger, StaticClass.TRIGGER_FIRED_NORMAL);
+        //插入任务实例状态
+        insertState(trigger, StaticClass.TRIGGER_FIRED_NORMAL);
+        insertStateHistory(trigger, StaticClass.TRIGGER_FIRED_NORMAL);
+
         JobDataMap jobDataMap = trigger.getJobDataMap();
         int isRelyOn = (Integer) jobDataMap.get(trigger.getKey() + "isRelyOn");
         if (isRelyOn > 0) {
@@ -49,29 +55,58 @@ public class AllTriggerListener implements TriggerListener {
     @Override
     public void triggerMisfired(Trigger trigger) {
         logger.error(trigger.getKey() + " misfired");
-        insetState(trigger, StaticClass.TRIGGER_FIRED_EXCEPTION);
+        insertStateHistory(trigger, StaticClass.TRIGGER_FIRED_EXCEPTION);
+        updateState(trigger, StaticClass.TRIGGER_FIRED_EXCEPTION);
     }
 
     @Override
     public void triggerComplete(Trigger trigger, JobExecutionContext context, Trigger.CompletedExecutionInstruction triggerInstructionCode) {
-        insetState(trigger, StaticClass.TRIGGER_FIRED_COMPLETE);
+        insertStateHistory(trigger, StaticClass.TRIGGER_FIRED_COMPLETE);
+        updateState(trigger, StaticClass.TRIGGER_FIRED_COMPLETE);
         logger.info(trigger.getKey() + " complete!");
     }
 
     /**
-     * 记录触发器的变更信息
+     * 记录触发器的变更历史
      *
      * @param trigger
      * @param state
      */
-    private void insetState(Trigger trigger, String state) {
+    private void insertStateHistory(Trigger trigger, String state) {
 //        TaskJobState po = new TaskJobState();
         po.setJobName(trigger.getKey().getName());
         po.setJobGroup(trigger.getKey().getGroup());
-        po.setFireTime(trigger.getPreviousFireTime());
+        po.setFireTimeLong(trigger.getPreviousFireTime().getTime());
         po.setJobState(state);
-        po.setInstanceNo(StaticClass.md5Str(trigger.getKey()+trigger.getPreviousFireTime().toString()));
-        int i = this.taskJobStateDAO.insert(po);
+        po.setInstanceNo(trigger.getKey() + new Long(trigger.getPreviousFireTime().getTime()).toString());
+        int i = this.taskJobStateService.insertHistory(po);
+    }
+
+    /**
+     * 记录触发器的运行状态
+     *
+     * @param trigger
+     * @param state
+     */
+    private void insertState(Trigger trigger, String state) {
+        tj.setJobName(trigger.getKey().getName());
+        tj.setJobGroup(trigger.getKey().getGroup());
+        tj.setFireTimeLong(trigger.getPreviousFireTime().getTime());
+        tj.setJobState(state);
+        tj.setInstanceNo(trigger.getKey() + new Long(trigger.getPreviousFireTime().getTime()).toString());
+        int i = this.taskJobStateService.insertState(tj);
+    }
+
+    /**
+     * 更新触发器的运行状态
+     *
+     * @param trigger
+     * @param state
+     */
+    private void updateState(Trigger trigger, String state) {
+        tj.setJobState(state);
+        tj.setInstanceNo(trigger.getKey() + new Long(trigger.getPreviousFireTime().getTime()).toString());
+        int i = this.taskJobStateService.updateState(tj);
     }
 
     /**
@@ -85,7 +120,7 @@ public class AllTriggerListener implements TriggerListener {
         try {
             //存在依赖，暂停任务，并记录
             context.getScheduler().pauseTrigger(trigger.getKey());
-            insetState(trigger, StaticClass.TRIGGER_FIRED_WAITING);
+            insertStateHistory(trigger, StaticClass.TRIGGER_FIRED_WAITING);
 
             //读取依赖任务信息，以及任务配置
 
@@ -107,21 +142,21 @@ public class AllTriggerListener implements TriggerListener {
                 poRely.setJobName(key.getName());
                 poRely.setJobGroup(key.getGroup());
                 poRely.setJobState(StaticClass.TRIGGER_FIRED_COMPLETE);
-                poRely.setFireTime(trigger.getPreviousFireTime());
+                poRely.setLarger(trigger.getPreviousFireTime().getTime());
 //                poRely.setRecordTime(new Date(trigger.getPreviousFireTime().getTime() - (trigger.getNextFireTime().getTime() - trigger.getPreviousFireTime().getTime())));
-                poRely.setRecordTime(context.getPreviousFireTime());
+                poRely.setSmaller(context.getPreviousFireTime().getTime());
                 //依赖任务执行完成或等待超时，将跳出 while 循环
                 while (true) {
                     try {
                         //查询依赖任务是否执行
-                        if (this.taskJobStateDAO.getStateCount(poRely) == 1) {
+                        if (this.taskJobStateService.getStateHistoryCount(poRely) == 1) {
                             flag = false;
                             break;
                         }
                         relyWaitTime--;
                         if (relyWaitTime == -1) {
                             logger.error(key + " 等待超时！");
-                            insetState(trigger, StaticClass.TRIGGER_FIRED_WAITING_OUT + key);
+                            insertStateHistory(trigger, StaticClass.TRIGGER_FIRED_WAITING_OUT + key);
                             break;
                         }
                         Thread.sleep(60000);

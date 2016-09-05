@@ -3,10 +3,10 @@ package com.gszh.wis.tsp.model;
 import java.util.Date;
 
 /**
- * 任务实例状态
- * Created by chenzhixiong on 2016/9/2.
+ * 任务实例状态记录表
+ * Created by chenzhixiong on 2016/8/18.
  */
-public class TaskJobState {
+public class TaskJobStateHistory {
     private Integer id;
     private String instanceNo;
     private String jobName;
@@ -75,14 +75,6 @@ public class TaskJobState {
         this.recordTime = recordTime;
     }
 
-    public Long getLarger() {
-        return larger;
-    }
-
-    public void setLarger(Long larger) {
-        this.larger = larger;
-    }
-
     public Long getSmaller() {
         return smaller;
     }
@@ -91,9 +83,17 @@ public class TaskJobState {
         this.smaller = smaller;
     }
 
+    public Long getLarger() {
+        return larger;
+    }
+
+    public void setLarger(Long larger) {
+        this.larger = larger;
+    }
+
     @Override
     public String toString() {
-        return "TaskJobState{" +
+        return "TaskJobStateHistory{" +
                 "id=" + id +
                 ", instanceNo='" + instanceNo + '\'' +
                 ", jobName='" + jobName + '\'' +
@@ -101,6 +101,8 @@ public class TaskJobState {
                 ", fireTimeLong=" + fireTimeLong +
                 ", jobState='" + jobState + '\'' +
                 ", recordTime=" + recordTime +
+                ", larger=" + larger +
+                ", smaller=" + smaller +
                 '}';
     }
 }

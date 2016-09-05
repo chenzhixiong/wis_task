@@ -142,7 +142,6 @@
 
     <!-- 存储过程：清空 qrtz_* 的表 -->
     <update id="clearDB">
-        call taskscheduler.clearDB()
+        call taskscheduler.clear_qrtz()
     </update>
 </mapper>
-

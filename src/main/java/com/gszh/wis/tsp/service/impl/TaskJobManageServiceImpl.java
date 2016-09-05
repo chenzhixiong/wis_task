@@ -3,13 +3,15 @@ package com.gszh.wis.tsp.service.impl;
 import com.gszh.wis.tsp.dao.TaskJobCronDAO;
 import com.gszh.wis.tsp.dao.TaskJobParamDAO;
 import com.gszh.wis.tsp.dao.TaskJobStateDAO;
+import com.gszh.wis.tsp.dao.TaskJobStateHistoryDAO;
 import com.gszh.wis.tsp.listener.AllJobListener;
 import com.gszh.wis.tsp.listener.AllTriggerListener;
 import com.gszh.wis.tsp.listener.MySchedulerListener;
 import com.gszh.wis.tsp.model.TaskJobCron;
 import com.gszh.wis.tsp.model.TaskJobParam;
-import com.gszh.wis.tsp.model.TaskJobState;
+import com.gszh.wis.tsp.model.TaskJobStateHistory;
 import com.gszh.wis.tsp.service.TaskJobManageService;
+import com.gszh.wis.tsp.service.TaskJobStateService;
 import com.gszh.wis.tsp.task.base.ControllableJob;
 import org.quartz.*;
 import org.slf4j.Logger;
@@ -34,7 +36,7 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
     @Autowired
     private SchedulerFactoryBean schedulerFactoryBean;
     @Autowired
-    private TaskJobStateDAO taskJobStateDAO;
+    private TaskJobStateHistoryDAO taskJobStateHistoryDAO;
     @Autowired
     private TaskJobParamDAO taskJobParamDAO;
 
@@ -42,12 +44,12 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
      * 注册监听器
      */
     @Override
-    public void regeistListener() {
+    public void regeistListener(TaskJobStateService taskJobStateService) {
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
         try {
             scheduler.getListenerManager().addSchedulerListener(new MySchedulerListener());
             scheduler.getListenerManager().addJobListener(new AllJobListener());
-            scheduler.getListenerManager().addTriggerListener(new AllTriggerListener(taskJobStateDAO));
+            scheduler.getListenerManager().addTriggerListener(new AllTriggerListener(taskJobStateService));
             logger.info("Regeist all Listeners!");
         } catch (SchedulerException e) {
             e.printStackTrace();
@@ -308,6 +310,7 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
         workInstance(instanceNo, 2);
     }
 
+
     /**
      * 对任务实例的操作（线程）
      *
@@ -316,18 +319,18 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
      */
     private void workInstance(String instanceNo, int flag) {
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
-        TaskJobState po = new TaskJobState();
+        TaskJobStateHistory po = new TaskJobStateHistory();
         po.setInstanceNo(instanceNo);
-        List<TaskJobState> list = this.taskJobStateDAO.getState(po);
-        if (list != null && list.size() > 0){
+        List<TaskJobStateHistory> list = this.taskJobStateHistoryDAO.getStateHistory(po);
+        if (list != null && list.size() > 0) {
             po = list.get(0);
         }
         try {
             //判断 实例是否存在
-            if (po != null && po.getJobName()!=null && po.getJobGroup()!=null
+            if (po != null && po.getJobName() != null && po.getJobGroup() != null
                     && !"".equals(po.getJobName().trim()) && !"".equals(po.getJobGroup().trim())) {
-                JobKey key=JobKey.jobKey(po.getJobName(),po.getJobGroup());
-                Date fireTime = po.getFireTime();
+                JobKey key = JobKey.jobKey(po.getJobName(), po.getJobGroup());
+                Long fireTimeLong = po.getFireTimeLong();
                 List<JobExecutionContext> jobs = scheduler.getCurrentlyExecutingJobs();
                 System.out.println(jobs);
                 JobDetail jobDetail = null;
@@ -336,8 +339,8 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
                 for (JobExecutionContext jec : jobs) {
                     jobDetail = jec.getJobDetail();
                     System.out.println(jec.getFireTime().getTime());
-                    System.out.println(fireTime.getTime());
-                    if (key.equals(jobDetail.getKey()) && jec.getFireTime().getTime()-fireTime.getTime()<1000) {
+                    System.out.println(fireTimeLong);
+                    if (key.equals(jobDetail.getKey()) && jec.getFireTime().getTime() - fireTimeLong < 1000) {
                         job = jec.getJobInstance();
                         if (job instanceof ControllableJob) {
                             switch (flag) {
@@ -361,8 +364,8 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
                         }
                     }
                 }
-            } else{
-                logger.error("The instance of instanceNo("+instanceNo+") is not exist!");
+            } else {
+                logger.error("The instance of instanceNo(" + instanceNo + ") is not exist!");
             }
         } catch (SchedulerException e) {
             e.printStackTrace();

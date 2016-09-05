@@ -6,11 +6,14 @@ import java.security.MessageDigest;
  * Created by chenzhixiong on 2016/8/18.
  */
 public class StaticClass {
-    public static final String TRIGGER_FIRED_NORMAL="执行";
-    public static final String TRIGGER_FIRED_WAITING="等待";
-    public static final String TRIGGER_FIRED_WAITING_OUT="等待超时，等待的任务key：";
-    public static final String TRIGGER_FIRED_COMPLETE="完成";
-    public static final String TRIGGER_FIRED_EXCEPTION="异常";
+    public static final String TRIGGER_FIRED_NORMAL="开始运行";
+    public static final String TRIGGER_FIRED_WAITING="依赖等待";
+    public static final String TRIGGER_FIRED_WAITING_OUT="等待超时，所等待任务key为：";
+    public static final String TRIGGER_FIRED_COMPLETE="结束完成";
+    public static final String TRIGGER_FIRED_EXCEPTION="错过时间，调用 misfired 策略";
+    public static final String TRIGGER_INSTANCE_PAUSE="暂停操作";
+    public static final String TRIGGER_INSTANCE_RESUME="恢复运行";
+    public static final String TRIGGER_INSTANCE_STOP="任务中断";
 
     /**
      * md5 加密

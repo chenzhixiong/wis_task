@@ -7,11 +7,11 @@
        http://www.springframework.org/schema/context
        http://www.springframework.org/schema/context/spring-context.xsd">
 
-	<!-- 常用注解声明（如@Autowired，@Resource 、@PostConstruct、@PreDestroy等等的声明）,
-		<context:component-scan>已经有包含上述注解声明，所以这个标签可以移除了 -->
+    <!-- 常用注解声明（如@Autowired，@Resource 、@PostConstruct、@PreDestroy等等的声明）,
+        <context:component-scan>已经有包含上述注解声明，所以这个标签可以移除了 -->
     <!-- <context:annotation-config/> -->
 
-	<!-- 自动扫描注解（Controller 类型注解不扫描，交由 springmvc 处理） -->
+    <!-- 自动扫描注解（Controller 类型注解不扫描，交由 springmvc 处理） -->
     <context:component-scan base-package="com.gszh.wis.tsp.*">
         <context:exclude-filter type="annotation"
                                 expression="org.springframework.stereotype.Controller"/>
@@ -27,11 +27,11 @@
         <property name="password" value="${jdbc.password}"/>
 
         <!--连接池最小空闲-->
-        <property name="minPoolSize" value="${jdbc.pool.minPoolSize}" />
+        <property name="minPoolSize" value="${jdbc.pool.minPoolSize}"/>
         <!--连接池最大-->
-        <property name="maxPoolSize" value="${jdbc.pool.maxPoolSize}" />
+        <property name="maxPoolSize" value="${jdbc.pool.maxPoolSize}"/>
         <!--初始化大小-->
-        <property name="initialPoolSize" value="${jdbc.pool.initialPoolSize}" />
+        <property name="initialPoolSize" value="${jdbc.pool.initialPoolSize}"/>
     </bean>
 
     <!-- 扫描basePackage接口 -->
@@ -79,16 +79,19 @@
     </bean>
 
     <!-- 开机自启 -->
-    <bean id = "bootManageListener" class="com.gszh.wis.tsp.listener.BootManageListener"></bean>
+    <bean id="bootManageListener" class="com.gszh.wis.tsp.listener.BootManageListener"></bean>
 
+    <!-- 自定义JobFactory -->
+    <bean id="jobFactory" class="com.gszh.wis.tsp.task.base.MyJobFactory"></bean>
     <!-- spring3.1以上整合 quartz2.x 只需配置 schedulerFactoryBean -->
     <bean id="schedulerFactoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
-        <property name="dataSource" ref="dataSource" />
-        <property name="configLocation" value="classpath:quartz.properties" />
+        <property name="dataSource" ref="dataSource"/>
+        <property name="configLocation" value="classpath:quartz.properties"/>
         <!--applicationContextSchedulerContextKey：
         是org.springframework.scheduling.quartz.SchedulerFactoryBean这个类中
         把spring上下 文以key/value的方式存放在了quartz的上下文中了，
         可以用applicationContextSchedulerContextKey所定义的key得到对应的spring上下文-->
         <property name="applicationContextSchedulerContextKey" value="applicationContextKey"/>
+        <property name="jobFactory" ref="jobFactory"></property>
     </bean>
 </beans>

@@ -5,26 +5,35 @@ import com.gszh.wis.tsp.model.TaskJobState;
 import java.util.List;
 
 /**
- * Created by chenzhixiong on 2016/8/18.
+ * 任务实例状态DAO
+ * Created by chenzhixiong on 2016/9/2.
  */
 public interface TaskJobStateDAO {
 
-    int insert(TaskJobState po);
-
-    int delete(TaskJobState po);
-
-    int update(TaskJobState po);
+    /**
+     * 获取状态信息
+     * @param po
+     * @return
+     */
+    List<TaskJobState> getState(TaskJobState po);
 
     /**
-     * 查询特定状态的任务实例是否存在
+     * 查询状态信息
      * @param po
      * @return
      */
     int getStateCount(TaskJobState po);
 
     /**
-     * 查询某个任务实例
+     * 状态插入
+     * @param po
      */
-    List<TaskJobState> getState(TaskJobState po);
+    int insert(TaskJobState po);
+
+    /**
+     * 状态更新
+     * @param po
+     */
+    int update(TaskJobState po);
 
 }

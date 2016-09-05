@@ -1,7 +1,12 @@
 package com.gszh.wis.tsp.task.serial;
 
+import com.gszh.wis.tsp.model.StaticClass;
+import com.gszh.wis.tsp.model.TaskJobState;
+import com.gszh.wis.tsp.model.TaskJobStateHistory;
+import com.gszh.wis.tsp.service.TaskJobStateService;
 import com.gszh.wis.tsp.task.base.ControllableJob;
 import org.quartz.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -14,9 +19,10 @@ import java.util.Map;
 @DisallowConcurrentExecution
 public class SerialJob implements ControllableJob {
 
-    private volatile Thread thisThread;
+    private Thread thisThread;
     private String threadFlag = "";
-    private volatile boolean state = true;
+    private boolean state = true;
+    private Object object;
 
     private Map<String, Object> map = new HashMap<String, Object>();
     String entityClass;
@@ -24,6 +30,11 @@ public class SerialJob implements ControllableJob {
 //    String jobFile;
 //    String username;
 //    String password;
+
+    @Autowired
+    private TaskJobStateService taskJobStateService;
+    private TaskJobState jobState=new TaskJobState();
+    private TaskJobStateHistory jobStateHistory=new TaskJobStateHistory();
 
     public SerialJob() {
     }
@@ -34,13 +45,22 @@ public class SerialJob implements ControllableJob {
         JobKey key = context.getJobDetail().getKey();
         JobDataMap jobDataMap = context.getMergedJobDataMap();
         entityClass = jobDataMap.getString("entityClass");
+        System.out.println(map.size());
         map.clear();
         map = jobDataMap.getWrappedMap();
         map.put("fireTime", context.getFireTime());
+        String instanceNo=context.getTrigger().getKey() + new Long(context.getTrigger().getPreviousFireTime().getTime()).toString();
+        map.put("instanceNo",instanceNo);
+        jobState.setInstanceNo(instanceNo);
+        jobStateHistory.setInstanceNo(instanceNo);
+        jobStateHistory.setJobName(context.getJobDetail().getKey().getName());
+        jobStateHistory.setJobGroup(context.getJobDetail().getKey().getGroup());
+        jobStateHistory.setFireTimeLong(context.getFireTime().getTime());
+
         //Java 反射机制调用类方法
         try {
             Class classType = Class.forName(entityClass);
-            Object object = classType.newInstance();
+            object = classType.newInstance();
             System.out.println(object.getClass().getName());
             Method method = classType.getMethod("execute", Map.class);
             method.invoke(object, map);
@@ -63,7 +83,26 @@ public class SerialJob implements ControllableJob {
     @Override
     public void pasueInstance() {
         if (state) {
+            //向任务实例发送消息
+            try {
+                Class classType = Class.forName(entityClass);
+                System.out.println(object.getClass().getName());
+                Method method = classType.getMethod("pause", Map.class);
+                method.invoke(object, map);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            }
             state = false;
+            jobState.setJobState(StaticClass.TRIGGER_INSTANCE_PAUSE);
+            jobStateHistory.setJobState(StaticClass.TRIGGER_INSTANCE_PAUSE);
+            this.taskJobStateService.updateState(jobState);
+            this.taskJobStateService.insertHistory(jobStateHistory);
             thisThread.suspend();
         }
     }
@@ -76,7 +115,27 @@ public class SerialJob implements ControllableJob {
         if (!state) {
             state = true;
             thisThread.resume();
+            //向任务实例发送消息
+            try {
+                Class classType = Class.forName(entityClass);
+                System.out.println(object.getClass().getName());
+                Method method = classType.getMethod("resume", Map.class);
+                method.invoke(object, map);
+                jobState.setJobState(StaticClass.TRIGGER_INSTANCE_RESUME);
+                jobStateHistory.setJobState(StaticClass.TRIGGER_INSTANCE_RESUME);
+                this.taskJobStateService.updateState(jobState);
+                this.taskJobStateService.insertHistory(jobStateHistory);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            }
         }
+
     }
 
     /**
@@ -84,9 +143,29 @@ public class SerialJob implements ControllableJob {
      */
     @Override
     public void stopInstance() {
-        try{
-            thisThread.stop();}
-        catch (ThreadDeath e){
+        //向任务实例发送消息
+        try {
+            Class classType = Class.forName(entityClass);
+            System.out.println(object.getClass().getName());
+            Method method = classType.getMethod("stop", Map.class);
+            method.invoke(object, map);
+            jobState.setJobState(StaticClass.TRIGGER_INSTANCE_STOP);
+            jobStateHistory.setJobState(StaticClass.TRIGGER_INSTANCE_STOP);
+            this.taskJobStateService.updateState(jobState);
+            this.taskJobStateService.insertHistory(jobStateHistory);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            thisThread.stop();
+        } catch (ThreadDeath e) {
             e.printStackTrace();
         }
     }

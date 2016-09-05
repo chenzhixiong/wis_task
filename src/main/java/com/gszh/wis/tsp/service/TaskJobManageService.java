@@ -13,7 +13,7 @@ public interface TaskJobManageService {
     /**
      * 注册监听器
      */
-    public void regeistListener();
+    public void regeistListener(TaskJobStateService taskJobStateService);
 
     /**
      * 开启全部定时器(开机自启的定时器)
