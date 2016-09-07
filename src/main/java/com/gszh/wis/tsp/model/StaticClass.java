@@ -1,6 +1,8 @@
 package com.gszh.wis.tsp.model;
 
 import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by chenzhixiong on 2016/8/18.
@@ -14,6 +16,16 @@ public class StaticClass {
     public static final String TRIGGER_INSTANCE_PAUSE="暂停操作";
     public static final String TRIGGER_INSTANCE_RESUME="恢复运行";
     public static final String TRIGGER_INSTANCE_STOP="任务中断";
+
+    //串行任务池
+    public static List<String> poolList=new ArrayList<String>();
+    //并行任务载体
+    public static String parallel="com.gszh.wis.tsp.task.Parallel.ParallelJob";
+    static {
+        for (int i=1;i<=20;i++){
+            poolList.add("com.gszh.wis.tsp.task.serial.SerialJob"+i);
+        }
+    }
 
     /**
      * md5 加密

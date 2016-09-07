@@ -22,8 +22,8 @@ public class BootManageListener implements ApplicationListener<ContextRefreshedE
         // spring 和 springmvc 整合，监听器会加载两次
         // root application context 没有parent，他就是老大.即第一次加载
         if(event.getApplicationContext().getParent() == null) {
-            this.taskJobManageService.regeistListener(taskJobStateService);
-            this.taskJobManageService.startAll();
+//            this.taskJobManageService.regeistListener(taskJobStateService);
+//            this.taskJobManageService.startAll();
         }
     }
 }

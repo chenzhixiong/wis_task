@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gszh.wis.tsp.dao.TaskJobEventDAO">
+
+    <select id="getEvent" parameterType="com.gszh.wis.tsp.model.TaskJobEvent"
+            resultType="com.gszh.wis.tsp.model.TaskJobEvent">
+        select * from task_job_event where 1=1
+        <if test="jobName !=null and jobName!=''">
+            AND job_name=#{jobName}
+        </if>
+    </select>
+
+    <update id="insert" parameterType="com.gszh.wis.tsp.model.TaskJobEvent">
+        INSERT INTO task_job_event (
+            job_name,
+            job_ch_name,
+            job_file,
+            job_class,
+            entity_class,
+            job_type,
+            description,
+            username,
+            password,
+            time,
+            time_type
+        )
+        VALUES
+            (
+                #{jobName},
+                #{jobChName},
+                #{jobFile},
+                #{jobClass},
+                #{entityClass},
+                #{jobType},
+                #{description},
+                #{username},
+                #{password},
+                #{time},
+                #{timeType}
+            );
+    </update>
+
+    <update id="update" parameterType="com.gszh.wis.tsp.model.TaskJobEvent">
+         UPDATE task_job_event
+        SET
+            job_ch_name=#{jobChName},
+            job_file=#{jobFile},
+            job_class=#{jobClass},
+            entity_class=#{entityClass},
+            job_type=#{jobType},
+            description=#{description},
+            time=#{time},
+            time_type=#{timeType}
+        WHERE
+            job_name=#{jobName}
+    </update>
+
+    <delete id="delete" parameterType="com.gszh.wis.tsp.model.TaskJobEvent">
+        DELETE FROM task_job_event WHERE job_name=#{jobName}
+    </delete>
+
+</mapper>

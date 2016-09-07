@@ -36,7 +36,7 @@ public class TaskJobManageController {
             TaskJobCron po = new TaskJobCron();
             po.setJobName(jobName);
             po.setJobGroup(jobGroup);
-            this.taskJobManageService.startOne(po);
+            this.taskJobManageService.startCronJob(po);
         }
     }
 
@@ -48,7 +48,7 @@ public class TaskJobManageController {
     @RequestMapping("/addOne")
     public void addOne(TaskJobCron po) {
         if (po != null) {
-            this.taskJobManageService.addOne(po);
+            this.taskJobManageService.addCronJob(po);
         }
     }
 
@@ -60,7 +60,7 @@ public class TaskJobManageController {
     @RequestMapping("/updateOne")
     public void updateOne(TaskJobCron po) {
         if (po != null) {
-            this.taskJobManageService.updateOne(po);
+            this.taskJobManageService.updateCronJob(po);
         }
     }
 
@@ -76,7 +76,7 @@ public class TaskJobManageController {
             TaskJobCron po = new TaskJobCron();
             po.setJobName(jobName);
             po.setJobGroup(jobGroup);
-            this.taskJobManageService.pauseOne(po);
+            this.taskJobManageService.pauseCronJob(po);
         }
     }
 
@@ -92,7 +92,7 @@ public class TaskJobManageController {
             TaskJobCron po = new TaskJobCron();
             po.setJobName(jobName);
             po.setJobGroup(jobGroup);
-            this.taskJobManageService.resumeOne(po);
+            this.taskJobManageService.resumeCronJob(po);
         }
     }
 
@@ -108,7 +108,7 @@ public class TaskJobManageController {
             TaskJobCron po = new TaskJobCron();
             po.setJobName(jobName);
             po.setJobGroup(jobGroup);
-            this.taskJobManageService.deleteOne(po);
+            this.taskJobManageService.deleteCronJob(po);
         }
     }
 

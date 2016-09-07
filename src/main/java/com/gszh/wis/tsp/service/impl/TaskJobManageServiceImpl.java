@@ -2,26 +2,26 @@ package com.gszh.wis.tsp.service.impl;
 
 import com.gszh.wis.tsp.dao.TaskJobCronDAO;
 import com.gszh.wis.tsp.dao.TaskJobParamDAO;
-import com.gszh.wis.tsp.dao.TaskJobStateDAO;
 import com.gszh.wis.tsp.dao.TaskJobStateHistoryDAO;
 import com.gszh.wis.tsp.listener.AllJobListener;
 import com.gszh.wis.tsp.listener.AllTriggerListener;
 import com.gszh.wis.tsp.listener.MySchedulerListener;
-import com.gszh.wis.tsp.model.TaskJobCron;
-import com.gszh.wis.tsp.model.TaskJobParam;
-import com.gszh.wis.tsp.model.TaskJobStateHistory;
+import com.gszh.wis.tsp.model.*;
 import com.gszh.wis.tsp.service.TaskJobManageService;
 import com.gszh.wis.tsp.service.TaskJobStateService;
 import com.gszh.wis.tsp.task.base.ControllableJob;
 import org.quartz.*;
+import org.quartz.impl.matchers.GroupMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by chenzhixiong on 2016/8/11.
@@ -47,6 +47,8 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
     public void regeistListener(TaskJobStateService taskJobStateService) {
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
         try {
+            //清空定时任务队列，重新从数据库中读取任务列表
+            scheduler.clear();
             scheduler.getListenerManager().addSchedulerListener(new MySchedulerListener());
             scheduler.getListenerManager().addJobListener(new AllJobListener());
             scheduler.getListenerManager().addTriggerListener(new AllTriggerListener(taskJobStateService));
@@ -62,20 +64,14 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
     @Override
     public void startAll() {
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
-        try {
-            //清空定时任务队列，重新从数据库中读取任务列表
-            scheduler.clear();
-            //清空 qrtz_* 的表
-            List<TaskJobCron> list = this.taskJobCronDAO.getAll();
-            this.taskJobCronDAO.clearDB();
-            if (list != null && list.size() > 0) {
-                for (TaskJobCron po : list) {
-                    if (po.getIfBoot() == 1)
-                        addCronTaskToScheduler(po);
-                }
+        List<TaskJobCron> list = this.taskJobCronDAO.getAll();
+        //清空 qrtz_* 的表
+        this.taskJobCronDAO.clearDB();
+        if (list != null && list.size() > 0) {
+            for (TaskJobCron po : list) {
+                if (po.getIfBoot() == 1)
+                    addCronTaskToScheduler(po);
             }
-        } catch (SchedulerException e) {
-            e.printStackTrace();
         }
     }
 
@@ -85,7 +81,7 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
      * @param po
      */
     @Override
-    public void startOne(TaskJobCron po) {
+    public void startCronJob(TaskJobCron po) {
         List<TaskJobCron> list = this.taskJobCronDAO.getTask(po);
         if (list.size() == 1) {
             addCronTaskToScheduler(list.get(0));
@@ -100,7 +96,7 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
      * @param po
      */
     @Override
-    public void addOne(TaskJobCron po) {
+    public void addCronJob(TaskJobCron po) {
         TaskJobCron param = new TaskJobCron();
         param.setJobName(po.getJobName());
         param.setJobGroup(po.getJobGroup());
@@ -119,7 +115,7 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
      * @param po
      */
     @Override
-    public void updateOne(TaskJobCron po) {
+    public void updateCronJob(TaskJobCron po) {
         List<TaskJobCron> list = this.taskJobCronDAO.getTask(po);
         if (list.size() == 1) {
             addCronTaskToScheduler(po);
@@ -135,7 +131,7 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
      * @param po
      */
     @Override
-    public void pauseOne(TaskJobCron po) {
+    public void pauseCronJob(TaskJobCron po) {
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
         try {
             scheduler.pauseTrigger(TriggerKey.triggerKey(po.getJobName(), po.getJobGroup()));
@@ -150,7 +146,7 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
      * @param po
      */
     @Override
-    public void resumeOne(TaskJobCron po) {
+    public void resumeCronJob(TaskJobCron po) {
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
         try {
             scheduler.resumeTrigger(TriggerKey.triggerKey(po.getJobName(), po.getJobGroup()));
@@ -165,10 +161,10 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
      * @param po
      */
     @Override
-    public void deleteOne(TaskJobCron po) {
+    public void deleteCronJob(TaskJobCron po) {
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
         try {
-            pauseOne(po);
+            pauseCronJob(po);
             scheduler.deleteJob(JobKey.jobKey(po.getJobName(), po.getJobGroup()));
             int count = this.taskJobCronDAO.delete(po);
         } catch (SchedulerException e) {
@@ -177,16 +173,95 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
     }
 
     /**
-     * scheduler 注册 cron 任务并启动
+     * 暂停实例
+     *
+     * @param instanceNo
+     */
+    @Override
+    public void pasueInstance(String instanceNo) {
+        workInstance(instanceNo, 0);
+    }
+
+    /**
+     * 恢复实例
+     *
+     * @param instanceNo
+     */
+    @Override
+    public void resumeInstance(String instanceNo) {
+        workInstance(instanceNo, 1);
+    }
+
+    /**
+     * 停止实例
+     *
+     * @param instanceNo
+     */
+    @Override
+    public void stopInstance(String instanceNo) {
+        workInstance(instanceNo, 2);
+    }
+
+    /**
+     * 添加事件任务
      *
      * @param po
      */
     @Override
+    public void addEventJob(TaskJobEvent po) {
+
+    }
+
+    /**
+     * 启动事件任务
+     *
+     * @param po
+     */
+    @Override
+    public void startEventJob(TaskJobEvent po) {
+
+    }
+
+    /**
+     * 修改事件任务
+     *
+     * @param po
+     */
+    @Override
+    public void updateEventJob(TaskJobEvent po) {
+
+    }
+
+    /**
+     * 删除事件任务
+     *
+     * @param po
+     */
+    @Override
+    public void deleteEventJob(TaskJobEvent po) {
+
+    }
+
+
+    /**
+     * scheduler 注册 cron 任务并启动
+     *
+     * @param po
+     */
     public void addCronTaskToScheduler(TaskJobCron po) {
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
         try {
             scheduler.start();
             JobDataMap parameters = new JobDataMap();
+            if ("0".equals(po.getJobClass().trim())) {
+                po.setJobClass(jobPoolMangage());
+            } else if ("1".equals(po.getJobClass().trim())) {
+                po.setJobClass(StaticClass.parallel);
+            } else {
+                logger.error("未设置任务载体！");
+                return;
+            }
+
             //获取实体类参数
             parameters = getJobParam(po);
             /*创建执行任务，可设置如下参数
@@ -281,37 +356,6 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
     }
 
     /**
-     * 暂停实例
-     *
-     * @param instanceNo
-     */
-    @Override
-    public void pasueInstance(String instanceNo) {
-        workInstance(instanceNo, 0);
-    }
-
-    /**
-     * 恢复实例
-     *
-     * @param instanceNo
-     */
-    @Override
-    public void resumeInstance(String instanceNo) {
-        workInstance(instanceNo, 1);
-    }
-
-    /**
-     * 停止实例
-     *
-     * @param instanceNo
-     */
-    @Override
-    public void stopInstance(String instanceNo) {
-        workInstance(instanceNo, 2);
-    }
-
-
-    /**
      * 对任务实例的操作（线程）
      *
      * @param instanceNo
@@ -388,6 +432,59 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
             }
         }
         return parameters;
+    }
+
+    /**
+     * 分配串行化任务执行类
+     *
+     * @return
+     */
+    private String jobPoolMangage() {
+        Scheduler scheduler = schedulerFactoryBean.getScheduler();
+        List<String> jobList = new ArrayList<String>();
+        List<String> poolList = new ArrayList<String>();
+        try {
+            Set<JobKey> jobKeys = scheduler.getJobKeys(GroupMatcher.<JobKey>anyGroup());
+            for (JobKey jobKey : jobKeys) {
+                String jobClass = scheduler.getJobDetail(jobKey).getJobClass().getName();
+                jobList.add(jobClass);
+            }
+            poolList.addAll(StaticClass.poolList);
+            jobList = getIntersection(poolList, jobList);
+            poolList.removeAll(jobList);
+        } catch (SchedulerException e) {
+            e.printStackTrace();
+        }
+        return poolList.get(0);
+    }
+
+    /**
+     * 求余 bList%aList
+     *
+     * @param aList
+     * @param bList
+     * @return
+     */
+    private List<String> getIntersection(List<String> aList, List<String> bList) {
+        List<String> cList = new ArrayList<String>();
+        //清除 bList 中与 aList 无关的元素
+        cList.addAll(bList);
+        bList.removeAll(aList);
+        cList.removeAll(bList);
+        bList.clear();
+        bList.addAll(cList);
+        //遍历 bList 每次去除一组与 aList 相同的元素
+        while (bList.size() > aList.size()) {
+            for (String a : aList) {
+                for (int i = 0; i < bList.size(); i++) {
+                    if (bList.get(i).equals(a)) {
+                        bList.remove(i);
+                        break;
+                    }
+                }
+            }
+        }
+        return bList;
     }
 
 }

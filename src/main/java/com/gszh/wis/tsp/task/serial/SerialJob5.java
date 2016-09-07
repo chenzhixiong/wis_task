@@ -17,7 +17,7 @@ import java.util.Map;
  * Created by chenzhixiong on 2016/8/29.
  */
 @DisallowConcurrentExecution
-public class SerialJob implements ControllableJob {
+public class SerialJob5 implements ControllableJob {
 
     private Thread thisThread;
     private String threadFlag = "";
@@ -36,7 +36,7 @@ public class SerialJob implements ControllableJob {
     private TaskJobState jobState=new TaskJobState();
     private TaskJobStateHistory jobStateHistory=new TaskJobStateHistory();
 
-    public SerialJob() {
+    public SerialJob5() {
     }
 
     @Override

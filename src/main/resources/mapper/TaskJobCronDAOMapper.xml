@@ -61,12 +61,11 @@
 
     <insert id="insert" parameterType="com.gszh.wis.tsp.model.TaskJobCron">
         INSERT INTO task_job_cron (
-            id,
             job_name,
             job_group,
             job_ch_name,
             job_file,
-            jobClass,
+            job_class,
             entity_class,
             cron_expression,
             priority,
@@ -79,8 +78,6 @@
             end_time,
             job_type,
             description,
-            create_time,
-            update_time,
             username,
             password
         )
@@ -125,9 +122,7 @@
             start_time=#{startTime},
             end_time=#{endTime},
             job_type=#{jobType},
-            description=#{description},
-            create_time=#{username},
-            update_time=#{password}
+            description=#{description}
         WHERE
             job_name=#{jobName} AND
             job_group=#{jobGroup}
