@@ -3,36 +3,39 @@
 <mapper namespace="com.gszh.wis.tsp.dao.TaskJobCronDAO">
 
     <!--<resultMap id="cronMap" type="com.gszh.wis.tsp.model.TaskJobCron">-->
-        <!--<result column="id" property="id" jdbcType="INTEGER" />-->
-        <!--<result column="job_name" property="jobName" jdbcType="VARCHAR" />-->
-        <!--<result column="job_group" property="jobGroup" jdbcType="VARCHAR" />-->
-        <!--<result column="job_ch_name" property="jobChName" jdbcType="VARCHAR" />-->
-        <!--<result column="job_file" property="jobFile" jdbcType="VARCHAR" />-->
-        <!--<result column="job_class" property="jobClass" jdbcType="VARCHAR" />-->
-        <!--<result column="entity_class" property="entityClass" jdbcType="VARCHAR" />-->
-        <!--<result column="cron_expression" property="cronExpression" jdbcType="VARCHAR" />-->
-        <!--<result column="priority" property="priority" jdbcType="INTEGER" />-->
-        <!--<result column="misfire" property="misfire" jdbcType="INTEGER" />-->
-        <!--<result column="if_boot" property="ifBoot" jdbcType="INTEGER" />-->
-        <!--<result column="is_rely_on" property="isRelyOn" jdbcType="INTEGER" />-->
-        <!--<result column="rely_wait_time" property="relyWaitTime" jdbcType="INTEGER" />-->
-        <!--<result column="rely_on" property="RelyOn" jdbcType="VARCHAR" />-->
-        <!--<result column="start_time" property="startTime" jdbcType="TIMESTAMP" />-->
-        <!--<result column="end_time" property="endTime" jdbcType="TIMESTAMP" />-->
-        <!--<result column="job_type" property="jobType" jdbcType="VARCHAR" />-->
-        <!--<result column="description" property="description" jdbcType="VARCHAR" />-->
-        <!--<result column="create_time" property="createTime" jdbcType="TIMESTAMP" />-->
-        <!--<result column="update_time" property="updateTime" jdbcType="TIMESTAMP" />-->
-        <!--<result column="username" property="username" jdbcType="VARCHAR" />-->
-        <!--<result column="password" property="password" jdbcType="VARCHAR" />-->
+    <!--<result column="id" property="id" jdbcType="INTEGER" />-->
+    <!--<result column="job_name" property="jobName" jdbcType="VARCHAR" />-->
+    <!--<result column="job_group" property="jobGroup" jdbcType="VARCHAR" />-->
+    <!--<result column="job_ch_name" property="jobChName" jdbcType="VARCHAR" />-->
+    <!--<result column="job_file" property="jobFile" jdbcType="VARCHAR" />-->
+    <!--<result column="job_class" property="jobClass" jdbcType="VARCHAR" />-->
+    <!--<result column="entity_class" property="entityClass" jdbcType="VARCHAR" />-->
+    <!--<result column="cron_expression" property="cronExpression" jdbcType="VARCHAR" />-->
+    <!--<result column="priority" property="priority" jdbcType="INTEGER" />-->
+    <!--<result column="misfire" property="misfire" jdbcType="INTEGER" />-->
+    <!--<result column="if_boot" property="ifBoot" jdbcType="INTEGER" />-->
+    <!--<result column="is_rely_on" property="isRelyOn" jdbcType="INTEGER" />-->
+    <!--<result column="rely_wait_time" property="relyWaitTime" jdbcType="INTEGER" />-->
+    <!--<result column="rely_on" property="RelyOn" jdbcType="VARCHAR" />-->
+    <!--<result column="start_time" property="startTime" jdbcType="TIMESTAMP" />-->
+    <!--<result column="end_time" property="endTime" jdbcType="TIMESTAMP" />-->
+    <!--<result column="job_type" property="jobType" jdbcType="VARCHAR" />-->
+    <!--<result column="description" property="description" jdbcType="VARCHAR" />-->
+    <!--<result column="create_time" property="createTime" jdbcType="TIMESTAMP" />-->
+    <!--<result column="update_time" property="updateTime" jdbcType="TIMESTAMP" />-->
+    <!--<result column="username" property="username" jdbcType="VARCHAR" />-->
+    <!--<result column="password" property="password" jdbcType="VARCHAR" />-->
     <!--</resultMap>-->
-
-    <select id="getAll" resultType="com.gszh.wis.tsp.model.TaskJobCron">
-        select * from task_job_cron 
+    <!-- 定时任务操作 -->
+    <!-- 获取所有的定时任务 -->
+    <select id="getAllCronJob" resultType="com.gszh.wis.tsp.model.TaskJobCron">
+        select * from task_job_cron WHERE job_group!="event"
     </select>
 
-    <select id="getTask" parameterType="com.gszh.wis.tsp.model.TaskJobCron" resultType="com.gszh.wis.tsp.model.TaskJobCron">
-        select * from task_job_cron where 1=1
+    <!-- 获取指定的定时任务 -->
+    <select id="getCronJob" parameterType="com.gszh.wis.tsp.model.TaskJobCron"
+            resultType="com.gszh.wis.tsp.model.TaskJobCron">
+        select * from task_job_cron where job_group!="event"
         <if test="id !=null and id>0">
             AND id=#{id}
         </if>
@@ -59,7 +62,8 @@
         </if>
     </select>
 
-    <insert id="insert" parameterType="com.gszh.wis.tsp.model.TaskJobCron">
+    <!-- 插入定时任务配置 -->
+    <insert id="insertCronJob" parameterType="com.gszh.wis.tsp.model.TaskJobCron">
         INSERT INTO task_job_cron (
             job_name,
             job_group,
@@ -105,7 +109,8 @@
             );
     </insert>
 
-    <update id="update" parameterType="com.gszh.wis.tsp.model.TaskJobCron">
+    <!-- 更新定时任务配置 -->
+    <update id="updateCronJob" parameterType="com.gszh.wis.tsp.model.TaskJobCron">
         UPDATE task_job_cron
         SET
             job_ch_name=#{jobChName},
@@ -123,14 +128,15 @@
             end_time=#{endTime},
             job_type=#{jobType},
             description=#{description}
-        WHERE
+        WHERE job_group!="event" AND
             job_name=#{jobName} AND
             job_group=#{jobGroup}
 	</update>
 
-    <delete id="delete" parameterType="com.gszh.wis.tsp.model.TaskJobCron">
+    <!-- 删除定时任务配置 -->
+    <delete id="deleteCronJob" parameterType="com.gszh.wis.tsp.model.TaskJobCron">
         delete from task_job_cron
-        WHERE
+        WHERE job_group!="event" AND
             job_name=#{jobName} AND
             job_group=#{jobGroup}
     </delete>
@@ -139,4 +145,85 @@
     <update id="clearDB">
         call taskscheduler.clear_qrtz()
     </update>
+
+
+    <!-- 事件任务操作 -->
+    <!-- 查询事件任务配置 -->
+    <select id="getEvent" parameterType="com.gszh.wis.tsp.model.TaskJobEvent"
+            resultType="com.gszh.wis.tsp.model.TaskJobEvent">
+        select id,
+        job_name,
+        job_group,
+        job_ch_name,
+        job_file,
+        job_class,
+        entity_class,
+        job_type,
+        description,
+        username,
+        password,
+        create_time,
+        update_time,
+        time,
+        time_type
+        from task_job_cron
+        where job_group="event"
+        <if test="jobName !=null and jobName!=''">
+            AND job_name=#{jobName}
+        </if>
+    </select>
+
+    <!-- 插入事件任务配置 -->
+    <insert id="insertEvent" parameterType="com.gszh.wis.tsp.model.TaskJobEvent">
+        INSERT INTO task_job_cron (
+        job_name,
+        job_group,
+        job_ch_name,
+        job_file,
+        job_class,
+        entity_class,
+        job_type,
+        description,
+        username,
+        password,
+        time,
+        time_type
+        )
+        VALUES
+        (
+        #{jobName},
+        'event',
+        #{jobChName},
+        #{jobFile},
+        #{jobClass},
+        #{entityClass},
+        #{jobType},
+        #{description},
+        #{username},
+        #{password},
+        #{time},
+        #{timeType}
+        );
+    </insert>
+
+    <!-- 更新事件任务配置 -->
+    <update id="updateEvent" parameterType="com.gszh.wis.tsp.model.TaskJobEvent">
+        UPDATE task_job_cron
+        SET
+        job_ch_name=#{jobChName},
+        job_file=#{jobFile},
+        job_class=#{jobClass},
+        entity_class=#{entityClass},
+        job_type=#{jobType},
+        description=#{description},
+        time=#{time},
+        time_type=#{timeType}
+        WHERE job_group="event" AND
+        job_name=#{jobName}
+    </update>
+
+    <!-- 删除事件任务配置 -->
+    <delete id="deleteEvent" parameterType="com.gszh.wis.tsp.model.TaskJobEvent">
+        DELETE FROM task_job_cron WHERE job_name=#{jobName} AND job_group="event"
+    </delete>
 </mapper>

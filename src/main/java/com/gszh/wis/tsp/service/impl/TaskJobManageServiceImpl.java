@@ -39,8 +39,6 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
     @Autowired
     private TaskJobParamDAO taskJobParamDAO;
     @Autowired
-    private TaskJobEventDAO taskJobEventDAO;
-    @Autowired
     private TaskJobStateDAO taskJobStateDAO;
 
     /**
@@ -67,7 +65,7 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
     @Override
     public void startAll() {
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
-        List<TaskJobCron> list = this.taskJobCronDAO.getAll();
+        List<TaskJobCron> list = this.taskJobCronDAO.getAllCronJob();
         //清空 qrtz_* 的表
         this.taskJobCronDAO.clearDB();
         if (list != null && list.size() > 0) {
@@ -85,7 +83,7 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
      */
     @Override
     public void startCronJob(TaskJobCron po) {
-        List<TaskJobCron> list = this.taskJobCronDAO.getTask(po);
+        List<TaskJobCron> list = this.taskJobCronDAO.getCronJob(po);
         if (list.size() == 1) {
             addCronTaskToScheduler(list.get(0));
         } else {
@@ -103,10 +101,10 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
         TaskJobCron param = new TaskJobCron();
         param.setJobName(po.getJobName());
         param.setJobGroup(po.getJobGroup());
-        List<TaskJobCron> list = this.taskJobCronDAO.getTask(param);
+        List<TaskJobCron> list = this.taskJobCronDAO.getCronJob(param);
         if (list.size() == 0) {
             addCronTaskToScheduler(po);
-            int count = this.taskJobCronDAO.insert(po);
+            int count = this.taskJobCronDAO.insertCronJob(po);
         } else {
             logger.error("该任务key已存在！");
         }
@@ -119,10 +117,10 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
      */
     @Override
     public void updateCronJob(TaskJobCron po) {
-        List<TaskJobCron> list = this.taskJobCronDAO.getTask(po);
+        List<TaskJobCron> list = this.taskJobCronDAO.getCronJob(po);
         if (list.size() == 1) {
             addCronTaskToScheduler(po);
-            int count = this.taskJobCronDAO.update(po);
+            int count = this.taskJobCronDAO.updateCronJob(po);
         } else {
             logger.error("修改失败");
         }
@@ -169,7 +167,7 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
         try {
             pauseCronJob(po);
             scheduler.deleteJob(JobKey.jobKey(po.getJobName(), po.getJobGroup()));
-            int count = this.taskJobCronDAO.delete(po);
+            int count = this.taskJobCronDAO.deleteCronJob(po);
         } catch (SchedulerException e) {
             e.printStackTrace();
         }
@@ -234,7 +232,7 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
                 cpo.setJobName(stateList.get(0).getJobName());
                 cpo.setJobGroup(stateList.get(0).getJobGroup());
                 //从数据库中提取任务配置，任务配置不存在，直接返回
-                List<TaskJobCron> cronList = this.taskJobCronDAO.getTask(cpo);
+                List<TaskJobCron> cronList = this.taskJobCronDAO.getCronJob(cpo);
                 if (cronList == null || cronList.size() == 0)
                     return;
                 cpo = cronList.get(0);
@@ -269,7 +267,7 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
      */
     @Override
     public void addEventJob(TaskJobEvent po) {
-        int i = this.taskJobEventDAO.insert(po);
+        int i = this.taskJobCronDAO.insertEvent(po);
         startEventJob(po);
     }
 
@@ -280,7 +278,7 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
      */
     @Override
     public void startEventJob(TaskJobEvent po) {
-        TaskJobEvent event = this.taskJobEventDAO.getEvent(po).get(0);
+        TaskJobEvent event = this.taskJobCronDAO.getEvent(po).get(0);
         if (event == null) {
             logger.error("任务不存在！");
             return;
@@ -323,7 +321,7 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
      */
     @Override
     public void updateEventJob(TaskJobEvent po) {
-        this.taskJobEventDAO.update(po);
+        this.taskJobCronDAO.updateEvent(po);
         startEventJob(po);
     }
 
@@ -334,7 +332,7 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
      */
     @Override
     public void deleteEventJob(TaskJobEvent po) {
-        this.taskJobEventDAO.delete(po);
+        this.taskJobCronDAO.deleteEvent(po);
     }
 
 

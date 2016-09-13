@@ -29,6 +29,8 @@ public class TaskJobCron {
     private String updateTime;
     private String username;
     private String password;
+    private Date time;
+    private String timeType;
 
     public Integer getId() {
         return id;
@@ -206,6 +208,22 @@ public class TaskJobCron {
         this.password = password;
     }
 
+    public Date getTime() {
+        return time;
+    }
+
+    public void setTime(Date time) {
+        this.time = time;
+    }
+
+    public String getTimeType() {
+        return timeType;
+    }
+
+    public void setTimeType(String timeType) {
+        this.timeType = timeType;
+    }
+
     @Override
     public String toString() {
         return "TaskJobCron{" +
@@ -231,6 +249,8 @@ public class TaskJobCron {
                 ", updateTime='" + updateTime + '\'' +
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
+                ", time=" + time +
+                ", timeType='" + timeType + '\'' +
                 '}';
     }
 }

@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.util.Date;
+
 /**
  * 定时任务管理器
  * Created by chenzhixiong on 2016/8/11.
@@ -141,6 +143,17 @@ public class TaskJobManageController {
     @RequestMapping("/stopInstance")
     public void stopInstance(String instanceNo) {
         taskJobManageService.stopInstance(instanceNo);
+    }
+
+    /**
+     * 实例重跑
+     *
+     * @param instanceNo
+     * @param fireTime
+     */
+    @RequestMapping("/restartInstance")
+    public void restartInstance(String instanceNo, Date fireTime) {
+        taskJobManageService.restartInstance(instanceNo, fireTime);
     }
 
     /**

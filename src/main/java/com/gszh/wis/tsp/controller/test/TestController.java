@@ -60,9 +60,9 @@ public class TestController {
         po.setJobState(StaticClass.TRIGGER_FIRED_COMPLETE);
         int i = this.taskJobStateDAO.insert(po);
         System.out.println(this.taskJobStateDAO.getStateCount(po) + "===============");
-        System.out.println("insert +" + i);
+        System.out.println("insertCronJob +" + i);
         int j = this.taskJobStateDAO.update(po);
-        System.out.println("update +" + i);
+        System.out.println("updateCronJob +" + i);
         System.out.println(this.taskJobStateDAO.getState(po));
     }
 
@@ -107,7 +107,7 @@ public class TestController {
         TaskJobCron po = new TaskJobCron();
         po.setJobGroup("1");
         po.setJobName("1");
-        System.out.println(this.taskJobCronDAO.getTask(po));
+        System.out.println(this.taskJobCronDAO.getCronJob(po));
     }
 
 }
