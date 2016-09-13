@@ -1,6 +1,6 @@
 package com.gszh.wis.tsp.listener;
 
-import com.gszh.wis.tsp.model.StaticClass;
+import com.gszh.wis.tsp.model.tool.StaticClass;
 import com.gszh.wis.tsp.model.TaskJobState;
 import com.gszh.wis.tsp.model.TaskJobStateHistory;
 import com.gszh.wis.tsp.service.TaskJobStateService;
@@ -40,7 +40,7 @@ public class AllTriggerListener implements TriggerListener {
         insertStateHistory(trigger, StaticClass.TRIGGER_FIRED_NORMAL);
 
         JobDataMap jobDataMap = trigger.getJobDataMap();
-        int isRelyOn = (Integer) jobDataMap.get(trigger.getKey() + "isRelyOn");
+        int isRelyOn = (Integer) jobDataMap.get(trigger.getJobKey() + "isRelyOn");
         if (isRelyOn > 0) {
             relyWait(trigger, context, jobDataMap);
         }

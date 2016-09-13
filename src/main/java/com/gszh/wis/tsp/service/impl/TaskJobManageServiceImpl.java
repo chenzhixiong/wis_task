@@ -1,12 +1,11 @@
 package com.gszh.wis.tsp.service.impl;
 
-import com.gszh.wis.tsp.dao.TaskJobCronDAO;
-import com.gszh.wis.tsp.dao.TaskJobParamDAO;
-import com.gszh.wis.tsp.dao.TaskJobStateHistoryDAO;
+import com.gszh.wis.tsp.dao.*;
 import com.gszh.wis.tsp.listener.AllJobListener;
 import com.gszh.wis.tsp.listener.AllTriggerListener;
 import com.gszh.wis.tsp.listener.MySchedulerListener;
 import com.gszh.wis.tsp.model.*;
+import com.gszh.wis.tsp.model.tool.StaticClass;
 import com.gszh.wis.tsp.service.TaskJobManageService;
 import com.gszh.wis.tsp.service.TaskJobStateService;
 import com.gszh.wis.tsp.task.base.ControllableJob;
@@ -39,6 +38,10 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
     private TaskJobStateHistoryDAO taskJobStateHistoryDAO;
     @Autowired
     private TaskJobParamDAO taskJobParamDAO;
+    @Autowired
+    private TaskJobEventDAO taskJobEventDAO;
+    @Autowired
+    private TaskJobStateDAO taskJobStateDAO;
 
     /**
      * 注册监听器
@@ -203,13 +206,71 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
     }
 
     /**
+     * 重跑实例
+     *
+     * @param instanceNo
+     * @param fireTime
+     */
+    @Override
+    public void restartInstance(String instanceNo, Date fireTime) {
+        Scheduler scheduler = schedulerFactoryBean.getScheduler();
+        TaskJobState spo = new TaskJobState();
+        spo.setInstanceNo(instanceNo);
+        //入参为空，直接返回
+        if (instanceNo == null || "".equals(instanceNo.trim()) || fireTime == null || fireTime.getTime() > 0)
+            return;
+        List<TaskJobState> stateList = this.taskJobStateDAO.getState(spo);
+        //不存在该实例记录，直接返回
+        if (stateList == null || stateList.size() == 0)
+            return;
+        JobKey jobKey = JobKey.jobKey(stateList.get(0).getJobName(), stateList.get(0).getJobGroup());
+        try {
+            JobDataMap dataMap = new JobDataMap();
+            dataMap.put("instanceNo", instanceNo);
+            dataMap.put("fireTime", fireTime);
+            //检查该任务配置是否已存在，不存在则创建一个新的，存在则不做任何操作
+            if (!scheduler.checkExists(jobKey)) {
+                TaskJobCron cpo = new TaskJobCron();
+                cpo.setJobName(stateList.get(0).getJobName());
+                cpo.setJobGroup(stateList.get(0).getJobGroup());
+                //从数据库中提取任务配置，任务配置不存在，直接返回
+                List<TaskJobCron> cronList = this.taskJobCronDAO.getTask(cpo);
+                if (cronList == null || cronList.size() == 0)
+                    return;
+                cpo = cronList.get(0);
+                JobDetail jobDetail = JobBuilder
+                        .newJob((Class<? extends Job>) Class.forName(cpo.getJobClass()))
+                        .withIdentity(jobKey)
+                        .usingJobData("entityClass", cpo.getEntityClass())
+                        .usingJobData("jobFile", cpo.getJobFile())
+                        .usingJobData("jobChName", cpo.getJobChName())
+                        .usingJobData("username", cpo.getUsername())
+                        .usingJobData("password", cpo.getPassword())
+                        .build();
+                scheduler.addJob(jobDetail, true);
+                //填补 trigger 需要的参数
+                dataMap.put(jobKey + "isRelyOn", cpo.getIsRelyOn());
+                dataMap.put(jobKey + "relyOn", cpo.getRelyOn());
+                dataMap.put(jobKey + "relyWaitTime", cpo.getRelyWaitTime());
+            }
+            scheduler.triggerJob(jobKey, dataMap);
+        } catch (SchedulerException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    /**
      * 添加事件任务
      *
      * @param po
      */
     @Override
     public void addEventJob(TaskJobEvent po) {
-
+        int i = this.taskJobEventDAO.insert(po);
+        startEventJob(po);
     }
 
     /**
@@ -219,7 +280,40 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
      */
     @Override
     public void startEventJob(TaskJobEvent po) {
-
+        TaskJobEvent event = this.taskJobEventDAO.getEvent(po).get(0);
+        if (event == null) {
+            logger.error("任务不存在！");
+            return;
+        }
+        Scheduler scheduler = schedulerFactoryBean.getScheduler();
+        JobKey jobKey = JobKey.jobKey(event.getJobName(), event.getJobGroup());
+        //获取任务载体（串行/并行）
+        String jobClass = jobPoolMangage(po.getJobClass());
+        if (jobClass == null) {
+            return;
+        }
+        po.setJobClass(jobClass);
+        try {
+            JobDetail jobDetail = JobBuilder
+                    .newJob((Class<? extends Job>) Class.forName(event.getJobClass()))
+                    .withIdentity(jobKey)
+                    .usingJobData("entityClass", event.getEntityClass())
+                    .usingJobData("jobFile", event.getJobFile())
+                    .usingJobData("jobChName", event.getJobChName())
+                    .usingJobData("username", event.getUsername())
+                    .usingJobData("password", event.getPassword())
+                    .usingJobData("time", event.getTime().getTime())
+                    .usingJobData("timeType", event.getTimeType())
+                    .build();
+            scheduler.addJob(jobDetail, true, true);
+            JobDataMap dataMap = new JobDataMap();
+            dataMap.put(jobKey + "isRelyOn", 0);
+            scheduler.triggerJob(jobKey, dataMap);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (SchedulerException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -229,7 +323,8 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
      */
     @Override
     public void updateEventJob(TaskJobEvent po) {
-
+        this.taskJobEventDAO.update(po);
+        startEventJob(po);
     }
 
     /**
@@ -239,7 +334,7 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
      */
     @Override
     public void deleteEventJob(TaskJobEvent po) {
-
+        this.taskJobEventDAO.delete(po);
     }
 
 
@@ -253,15 +348,12 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
         try {
             scheduler.start();
             JobDataMap parameters = new JobDataMap();
-            if ("0".equals(po.getJobClass().trim())) {
-                po.setJobClass(jobPoolMangage());
-            } else if ("1".equals(po.getJobClass().trim())) {
-                po.setJobClass(StaticClass.parallel);
-            } else {
-                logger.error("未设置任务载体！");
+
+            String jobClass = jobPoolMangage(po.getJobClass());
+            if (jobClass == null) {
                 return;
             }
-
+            po.setJobClass(jobClass);
             //获取实体类参数
             parameters = getJobParam(po);
             /*创建执行任务，可设置如下参数
@@ -439,23 +531,32 @@ public class TaskJobManageServiceImpl implements TaskJobManageService {
      *
      * @return
      */
-    private String jobPoolMangage() {
-        Scheduler scheduler = schedulerFactoryBean.getScheduler();
-        List<String> jobList = new ArrayList<String>();
-        List<String> poolList = new ArrayList<String>();
-        try {
-            Set<JobKey> jobKeys = scheduler.getJobKeys(GroupMatcher.<JobKey>anyGroup());
-            for (JobKey jobKey : jobKeys) {
-                String jobClass = scheduler.getJobDetail(jobKey).getJobClass().getName();
-                jobList.add(jobClass);
+    private String jobPoolMangage(String type) {
+        String str = null;
+        if ("0".equals(type.trim())) {
+            Scheduler scheduler = schedulerFactoryBean.getScheduler();
+            List<String> jobList = new ArrayList<String>();
+            List<String> poolList = new ArrayList<String>();
+            try {
+                Set<JobKey> jobKeys = scheduler.getJobKeys(GroupMatcher.<JobKey>anyGroup());
+                for (JobKey jobKey : jobKeys) {
+                    String jobClass = scheduler.getJobDetail(jobKey).getJobClass().getName();
+                    jobList.add(jobClass);
+                }
+                poolList.addAll(StaticClass.poolList);
+                jobList = getIntersection(poolList, jobList);
+                if (jobList.size() != poolList.size())
+                    poolList.removeAll(jobList);
+            } catch (SchedulerException e) {
+                e.printStackTrace();
             }
-            poolList.addAll(StaticClass.poolList);
-            jobList = getIntersection(poolList, jobList);
-            poolList.removeAll(jobList);
-        } catch (SchedulerException e) {
-            e.printStackTrace();
+            str = poolList.get(0);
+        } else if ("1".equals(type.trim())) {
+            str = StaticClass.parallel;
+        } else {
+            logger.error("未设置任务载体！");
         }
-        return poolList.get(0);
+        return str;
     }
 
     /**

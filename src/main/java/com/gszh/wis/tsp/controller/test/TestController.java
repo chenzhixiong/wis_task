@@ -5,6 +5,7 @@ import com.gszh.wis.tsp.dao.TaskJobEventDAO;
 import com.gszh.wis.tsp.dao.TaskJobStateDAO;
 import com.gszh.wis.tsp.dao.TaskJobStateHistoryDAO;
 import com.gszh.wis.tsp.model.*;
+import com.gszh.wis.tsp.model.tool.StaticClass;
 import com.gszh.wis.tsp.service.TaskJobCronService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;

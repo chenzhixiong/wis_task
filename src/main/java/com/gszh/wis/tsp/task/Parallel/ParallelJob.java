@@ -1,10 +1,14 @@
-package com.gszh.wis.tsp.task.Parallel;
+package com.gszh.wis.tsp.task.parallel;
 
+import com.gszh.wis.tsp.model.TaskJobState;
+import com.gszh.wis.tsp.model.TaskJobStateHistory;
+import com.gszh.wis.tsp.model.tool.StaticClass;
+import com.gszh.wis.tsp.service.TaskJobStateService;
 import com.gszh.wis.tsp.task.base.ControllableJob;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.quartz.JobKey;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -16,15 +20,22 @@ import java.util.Map;
  */
 public class ParallelJob implements ControllableJob {
 
-    private volatile Thread thisThread;
-    private volatile String threadFlag = "";
-    private volatile boolean state = false;
+    private Thread thisThread;
+    private String threadFlag = "";
+    private boolean state = true;
+    private Object object;
 
+    private Map<String, Object> map = new HashMap<String, Object>();
     String entityClass;
 //    String jobChName;
 //    String jobFile;
 //    String username;
 //    String password;
+
+    @Autowired
+    private TaskJobStateService taskJobStateService;
+    private TaskJobState jobState=new TaskJobState();
+    private TaskJobStateHistory jobStateHistory=new TaskJobStateHistory();
 
     public ParallelJob() {
     }
@@ -32,17 +43,30 @@ public class ParallelJob implements ControllableJob {
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         thisThread = Thread.currentThread();
-        JobKey key = context.getJobDetail().getKey();
+//       JobKey key = context.getJobDetail().getKey();
         JobDataMap jobDataMap = context.getMergedJobDataMap();
         entityClass = jobDataMap.getString("entityClass");
+//       System.out.println(map.size());
+        map.clear();
+        map = jobDataMap.getWrappedMap();
+        if(!map.containsKey("fireTime"))
+            map.put("fireTime", context.getTrigger().getPreviousFireTime());
+        String instanceNo=context.getTrigger().getKey() + new Long(context.getTrigger().getPreviousFireTime().getTime()).toString();
+        if(!map.containsKey("instanceNo"))
+            map.put("instanceNo",instanceNo);
+        jobState.setInstanceNo(instanceNo);
+        jobStateHistory.setInstanceNo(instanceNo);
+        jobStateHistory.setJobName(context.getJobDetail().getKey().getName());
+        jobStateHistory.setJobGroup(context.getJobDetail().getKey().getGroup());
+        jobStateHistory.setFireTimeLong(context.getTrigger().getPreviousFireTime().getTime());
 
         //Java 反射机制调用类方法
         try {
             Class classType = Class.forName(entityClass);
-            Object object = classType.newInstance();
+            object = classType.newInstance();
             System.out.println(object.getClass().getName());
             Method method = classType.getMethod("execute", Map.class);
-            method.invoke(object, new HashMap<String, Object>());
+            method.invoke(object, map);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } catch (NoSuchMethodException e) {
@@ -61,15 +85,28 @@ public class ParallelJob implements ControllableJob {
      */
     @Override
     public void pasueInstance() {
-        if (!state) {
+        if (state) {
+            //向任务实例发送消息
             try {
-                synchronized (threadFlag) {
-                    thisThread.wait();
-                }
-                state=true;
-            } catch (InterruptedException e) {
+                Class classType = Class.forName(entityClass);
+                System.out.println(object.getClass().getName());
+                Method method = classType.getMethod("pause", Map.class);
+                method.invoke(object, map);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
                 e.printStackTrace();
             }
+            state = false;
+            jobState.setJobState(StaticClass.TRIGGER_INSTANCE_PAUSE);
+            jobStateHistory.setJobState(StaticClass.TRIGGER_INSTANCE_PAUSE);
+            this.taskJobStateService.updateState(jobState);
+            this.taskJobStateService.insertHistory(jobStateHistory);
+            thisThread.suspend();
         }
     }
 
@@ -78,12 +115,30 @@ public class ParallelJob implements ControllableJob {
      */
     @Override
     public void resumeInstance() {
-        if (state) {
-            synchronized (threadFlag) {
-                thisThread.notify();
+        if (!state) {
+            state = true;
+            thisThread.resume();
+            //向任务实例发送消息
+            try {
+                Class classType = Class.forName(entityClass);
+                System.out.println(object.getClass().getName());
+                Method method = classType.getMethod("resume", Map.class);
+                method.invoke(object, map);
+                jobState.setJobState(StaticClass.TRIGGER_INSTANCE_RESUME);
+                jobStateHistory.setJobState(StaticClass.TRIGGER_INSTANCE_RESUME);
+                this.taskJobStateService.updateState(jobState);
+                this.taskJobStateService.insertHistory(jobStateHistory);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
             }
-            state=false;
         }
+
     }
 
     /**
@@ -91,6 +146,30 @@ public class ParallelJob implements ControllableJob {
      */
     @Override
     public void stopInstance() {
-        thisThread.stop();
+        //向任务实例发送消息
+        try {
+            Class classType = Class.forName(entityClass);
+            System.out.println(object.getClass().getName());
+            Method method = classType.getMethod("stop", Map.class);
+            method.invoke(object, map);
+            jobState.setJobState(StaticClass.TRIGGER_INSTANCE_STOP);
+            jobStateHistory.setJobState(StaticClass.TRIGGER_INSTANCE_STOP);
+            this.taskJobStateService.updateState(jobState);
+            this.taskJobStateService.insertHistory(jobStateHistory);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            thisThread.stop();
+        } catch (ThreadDeath e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -16,6 +16,7 @@
         <c3p0.version>0.9.5.1</c3p0.version>
         <logback.version>1.1.0</logback.version>
         <quartz.version>2.2.1</quartz.version>
+        <freemarker.version>2.3.23</freemarker.version>
     </properties>
     <dependencies>
         <!-- 日志配置-->
@@ -116,7 +117,13 @@
             <version>${spring.version}</version>
             <scope>test</scope>
         </dependency>
-		
+
+        <!-- https://mvnrepository.com/artifact/org.freemarker/freemarker -->
+        <dependency>
+            <groupId>org.freemarker</groupId>
+            <artifactId>freemarker</artifactId>
+            <version>${freemarker.version}</version>
+        </dependency>
     </dependencies>
     <build>
         <finalName>tsp</finalName>

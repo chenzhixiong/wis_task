@@ -82,6 +82,13 @@ public interface TaskJobManageService {
     void stopInstance(String instanceNo);
 
     /**
+     * 重跑实例
+     * @param instanceNo
+     * @param fireTime
+     */
+    void restartInstance(String instanceNo,Date fireTime);
+
+    /**
      * 添加事件任务
      * @param po
      */

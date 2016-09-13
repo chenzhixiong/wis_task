@@ -1,5 +1,8 @@
-package com.gszh.wis.tsp.model;
+package com.gszh.wis.tsp.model.tool;
 
+/**
+ * Created by chenzhixiong on 2016/8/11.
+ */
 public class Result {
 
     public static final Integer SUCCESS_CODE = 1;

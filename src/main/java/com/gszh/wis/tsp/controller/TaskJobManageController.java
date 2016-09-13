@@ -1,6 +1,7 @@
 package com.gszh.wis.tsp.controller;
 
 import com.gszh.wis.tsp.model.TaskJobCron;
+import com.gszh.wis.tsp.model.TaskJobEvent;
 import com.gszh.wis.tsp.service.TaskJobManageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -140,5 +141,49 @@ public class TaskJobManageController {
     @RequestMapping("/stopInstance")
     public void stopInstance(String instanceNo) {
         taskJobManageService.stopInstance(instanceNo);
+    }
+
+    /**
+     * 添加事件任务
+     *
+     * @param po
+     */
+    @RequestMapping("/addEventJob")
+    public void addEventJob(TaskJobEvent po) {
+        taskJobManageService.addEventJob(po);
+    }
+
+    /**
+     * 启动事件任务
+     *
+     * @param jobName
+     */
+    @RequestMapping("/startEventJob")
+    public void startEventJob(String jobName) {
+        TaskJobEvent po = new TaskJobEvent();
+        po.setJobName(jobName);
+        taskJobManageService.startEventJob(po);
+    }
+
+    /**
+     * 修改事件任务
+     *
+     * @param po
+     */
+    @RequestMapping("/updateEventJob")
+    public void updateEventJob(TaskJobEvent po) {
+        taskJobManageService.updateEventJob(po);
+    }
+
+    /**
+     * 删除事件任务
+     *
+     * @param jobName
+     */
+    @RequestMapping("/deleteEventJob")
+    public void deleteEventJob(String jobName) {
+        TaskJobEvent po = new TaskJobEvent();
+        po.setJobName(jobName);
+        taskJobManageService.deleteEventJob(po);
     }
 }
